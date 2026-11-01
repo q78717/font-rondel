@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="monogram.ring" format="2">
+  <advance width="964"/>
+  <outline>
+    <contour>
+      <point x="916" y="320"/>
+      <point x="850" y="480"/>
+      <point x="728" y="602"/>
+      <point x="568" y="668"/>
+      <point x="396" y="668"/>
+      <point x="236" y="602"/>
+      <point x="114" y="480"/>
+      <point x="48" y="320"/>
+      <point x="48" y="148"/>
+      <point x="114" y="-12"/>
+      <point x="236" y="-134"/>
+      <point x="396" y="-200"/>
+      <point x="568" y="-200"/>
+      <point x="728" y="-134"/>
+      <point x="850" y="-12"/>
+      <point x="916" y="148"/>
+    </contour>
+    <contour>
+      <point x="848" y="161"/>
+      <point x="792" y="27"/>
+      <point x="689" y="-76"/>
+      <point x="555" y="-132"/>
+      <point x="409" y="-132"/>
+      <point x="275" y="-76"/>
+      <point x="172" y="27"/>
+      <point x="116" y="161"/>
+      <point x="116" y="307"/>
+      <point x="172" y="441"/>
+      <point x="275" y="544"/>
+      <point x="409" y="600"/>
+      <point x="555" y="600"/>
+      <point x="689" y="544"/>
+      <point x="792" y="441"/>
+      <point x="848" y="307"/>
+    </contour>
+  </outline>
+</glyph>

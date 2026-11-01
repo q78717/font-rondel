@@ -1,0 +1,15 @@
+# gftools builder recipe for Rondel (run from the repo root via sources/build.sh)
+sources:
+  - ufo/Rondel-Regular.ufo
+familyName: "Rondel"
+buildVariable: false
+buildStatic: true
+buildTTF: true
+buildOTF: false
+buildWebfont: true
+autohintTTF: true
+outputDir: "../fonts"
+ttDir: "../fonts/ttf"
+woffDir: "../fonts/webfonts"
+cleanUp: true
+removeOutlineOverlaps: false   # outlines are already merged by the build script

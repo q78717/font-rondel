@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="periodcentered" format="2">
+  <advance width="191"/>
+  <unicode hex="00B7"/>
+  <outline>
+    <contour>
+      <point x="143" y="243"/>
+      <point x="136" y="261"/>
+      <point x="123" y="274"/>
+      <point x="105" y="282"/>
+      <point x="86" y="282"/>
+      <point x="69" y="274"/>
+      <point x="55" y="261"/>
+      <point x="48" y="243"/>
+      <point x="48" y="225"/>
+      <point x="55" y="207"/>
+      <point x="69" y="194"/>
+      <point x="86" y="186"/>
+      <point x="105" y="186"/>
+      <point x="123" y="194"/>
+      <point x="136" y="207"/>
+      <point x="143" y="225"/>
+    </contour>
+  </outline>
+</glyph>

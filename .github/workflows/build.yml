@@ -17,22 +17,26 @@ jobs:
           python-version: "3.13"
           cache: pip
 
-      - name: Install
-        run: pip install -r requirements.txt -r requirements-qa.txt
+      - name: Install the build tools
+        run: pip install -r requirements.txt
 
       - name: Build fonts and specimen
         run: sources/build.sh
 
-      - name: FontBakery
-        run: >
-          fontbakery check-universal
-          --html fontbakery-report.html
-          --ghmarkdown fontbakery-report.md
-          fonts/ttf/*.ttf
+      - name: Install the checkers (separate environment)
+        run: |
+          python -m venv qa
+          qa/bin/pip install -r requirements-qa.txt
 
-      - name: Add report to the run summary
+      - name: FontBakery (Google Fonts profile for Rondel, universal for Ring and Coin)
+        run: |
+          qa/bin/fontbakery check-googlefonts -x fontbakery_version --html fb-rondel.html --ghmarkdown fb-rondel.md fonts/ttf/Rondel-Regular.ttf
+          qa/bin/fontbakery check-universal -x fontbakery_version --html fb-ring.html --ghmarkdown fb-ring.md fonts/ttf/RondelRing-Regular.ttf
+          qa/bin/fontbakery check-universal -x fontbakery_version --html fb-coin.html --ghmarkdown fb-coin.md fonts/ttf/RondelCoin-Regular.ttf
+
+      - name: Add the reports to the run summary
         if: always()
-        run: test -f fontbakery-report.md && cat fontbakery-report.md >> "$GITHUB_STEP_SUMMARY" || true
+        run: cat fb-*.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -41,4 +45,4 @@ jobs:
           path: |
             fonts/
             documentation/specimen/
-            fontbakery-report.*
+            fb-*.html

@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="O.mono1" format="2">
+  <outline>
+    <contour>
+      <point x="-168" y="296"/>
+      <point x="-216" y="412"/>
+      <point x="-304" y="500"/>
+      <point x="-420" y="548"/>
+      <point x="-544" y="548"/>
+      <point x="-660" y="500"/>
+      <point x="-748" y="412"/>
+      <point x="-796" y="296"/>
+      <point x="-796" y="172"/>
+      <point x="-748" y="56"/>
+      <point x="-660" y="-32"/>
+      <point x="-544" y="-80"/>
+      <point x="-420" y="-80"/>
+      <point x="-304" y="-32"/>
+      <point x="-216" y="56"/>
+      <point x="-168" y="172"/>
+    </contour>
+    <contour>
+      <point x="-236" y="185"/>
+      <point x="-273" y="95"/>
+      <point x="-343" y="25"/>
+      <point x="-433" y="-12"/>
+      <point x="-531" y="-12"/>
+      <point x="-621" y="25"/>
+      <point x="-691" y="95"/>
+      <point x="-728" y="185"/>
+      <point x="-728" y="283"/>
+      <point x="-691" y="373"/>
+      <point x="-621" y="443"/>
+      <point x="-531" y="480"/>
+      <point x="-433" y="480"/>
+      <point x="-343" y="443"/>
+      <point x="-273" y="373"/>
+      <point x="-236" y="283"/>
+    </contour>
+  </outline>
+</glyph>

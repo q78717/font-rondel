@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="I.mono3l" format="2">
+  <outline>
+    <contour>
+      <point x="-700" y="467" type="qcurve" smooth="yes"/>
+      <point x="-719" y="463"/>
+      <point x="-738" y="457" type="qcurve"/>
+      <point x="-717" y="392" type="line"/>
+      <point x="-709" y="395"/>
+      <point x="-700" y="396" type="qcurve"/>
+      <point x="-700" y="72" type="line"/>
+      <point x="-709" y="73"/>
+      <point x="-717" y="76" type="qcurve"/>
+      <point x="-738" y="11" type="line"/>
+      <point x="-719" y="5"/>
+      <point x="-700" y="2" type="qcurve"/>
+      <point x="-683" y="-2"/>
+      <point x="-649" y="-2"/>
+      <point x="-632" y="1" type="qcurve" smooth="yes"/>
+      <point x="-613" y="5"/>
+      <point x="-594" y="11" type="qcurve"/>
+      <point x="-615" y="76" type="line"/>
+      <point x="-623" y="73"/>
+      <point x="-632" y="72" type="qcurve"/>
+      <point x="-632" y="396" type="line"/>
+      <point x="-623" y="395"/>
+      <point x="-615" y="392" type="qcurve"/>
+      <point x="-594" y="457" type="line"/>
+      <point x="-613" y="463"/>
+      <point x="-632" y="466" type="qcurve"/>
+      <point x="-649" y="470"/>
+      <point x="-683" y="470"/>
+    </contour>
+  </outline>
+</glyph>

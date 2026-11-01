@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="C.mono3c" format="2">
+  <outline>
+    <contour>
+      <point x="-301" y="399" type="line"/>
+      <point x="-333" y="432"/>
+      <point x="-419" y="468"/>
+      <point x="-513" y="468"/>
+      <point x="-599" y="432"/>
+      <point x="-664" y="367"/>
+      <point x="-700" y="281"/>
+      <point x="-700" y="187"/>
+      <point x="-664" y="101"/>
+      <point x="-599" y="36"/>
+      <point x="-513" y="0"/>
+      <point x="-419" y="0"/>
+      <point x="-333" y="36"/>
+      <point x="-301" y="69" type="qcurve"/>
+      <point x="-349" y="117" type="line"/>
+      <point x="-372" y="93"/>
+      <point x="-433" y="68"/>
+      <point x="-499" y="68"/>
+      <point x="-560" y="93"/>
+      <point x="-607" y="140"/>
+      <point x="-632" y="201"/>
+      <point x="-632" y="267"/>
+      <point x="-607" y="328"/>
+      <point x="-560" y="375"/>
+      <point x="-499" y="400"/>
+      <point x="-433" y="400"/>
+      <point x="-372" y="375"/>
+      <point x="-349" y="351" type="qcurve"/>
+    </contour>
+  </outline>
+</glyph>

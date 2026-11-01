@@ -19,9 +19,13 @@ Monograms
   Typing 1-3 letters between < and >, e.g. <RV>, sets them as one medallion
   (contextual alternates / standard ligatures; Regular and Ring only).
 
-Requires: see requirements.txt (fonttools, skia-pathops, numpy, brotli, ttfautohint-py)
-Usage:    python3 build_rondel.py [--ttf DIR] [--woff2 DIR]      (both default to ./fonts)
-          RONDEL_NO_HINT=1 skips ttfautohint.
+Character set
+  Google Fonts Latin Core (accented Latin, punctuation and symbols) plus the monograms.
+
+Build
+  This script writes the UFO sources; gftools builder compiles them into fonts.
+  Run sources/build.sh to do both.
+  Usage:  python3 sources/build_rondel.py [--ufo sources/ufo] [--styles Regular Ring Coin]
 """
 import math
 import os
@@ -56,7 +60,7 @@ BASE = XB           # design y that maps to the baseline (bottom of lowercase ba
 SB = 0.12           # side bearing (open style), design units
 
 FAMILY = "Rondel"
-VERSION = "1.500"
+VERSION = "1.600"
 REPO_URL = "https://github.com/q78717/font-rondel"
 COPYRIGHT = f"Copyright 2026 The Rondel Project Authors ({REPO_URL})"
 
@@ -147,14 +151,26 @@ class G:
     """Collects stroked primitives in unit space. k scales the skeleton (not the stroke);
     sx/sy reflect it (used for mirrored and rotated glyphs)."""
 
-    def __init__(self, k=1.0, sx=1, sy=1, prims=None, skel=None, o=(0.0, 0.0)):
+    def __init__(self, k=1.0, sx=1, sy=1, prims=None, skel=None, o=(0.0, 0.0), w=None, extras=None):
         self.k, self.sx, self.sy = k, sx, sy
         self.o = o                                      # centre of this glyph's circle
+        self.w = W if w is None else w                  # stroke width
         self.prims = prims if prims is not None else []
         self.skel = skel if skel is not None else []   # centre-line record, for specimens
+        self.extras = extras if extras is not None else []   # parts outside this circle
 
     def flipped(self, sx=1, sy=1):
-        return G(self.k, self.sx * sx, self.sy * sy, self.prims, self.skel, self.o)
+        return G(self.k, self.sx * sx, self.sy * sy, self.prims, self.skel, self.o, self.w, self.extras)
+
+    def part(self, dx=0.0, dy=0.0, k_mul=1.0, w=None):
+        """A separate drawing whose own circle is centred at (dx, dy) of this one.
+        Its strokes are not trimmed by this glyph's circle (used for accents and
+        small inset letters)."""
+        p = G(self.k * k_mul, 1, 1, None, self.skel,
+              (self.o[0] + self.k * dx, self.o[1] + self.k * dy),
+              self.w if w is None else w)
+        self.extras.append(p)
+        return p
 
     # transforms --------------------------------------------------------------------
     def T(self, p):
@@ -171,12 +187,11 @@ class G:
         a, b = self.T((x0, y0)), self.T((x1, y1))
         return (min(a[0], b[0]), min(a[1], b[1]), max(a[0], b[0]), max(a[1], b[1]))
 
-    @staticmethod
-    def _ext(c):
+    def _ext(self, c):
         if c == "f":
             return 0.0
         if c == "s":
-            return W / 2
+            return self.w / 2
         if c == "c":
             return CUT
         return float(c)
@@ -188,7 +203,6 @@ class G:
     def poly(self, pts, c0="f", c1="f", clip=None):
         """Straight polyline with mitre joins. Caps: f=flat, s=square, c=run out to circle."""
         P = [self.T(p) for p in pts]
-        h = W / 2
         d = []
         for i in range(len(P) - 1):
             dx, dy = P[i + 1][0] - P[i][0], P[i + 1][1] - P[i][1]
@@ -198,6 +212,7 @@ class G:
         P[0] = (P[0][0] - d[0][0] * e0, P[0][1] - d[0][1] * e0)
         P[-1] = (P[-1][0] + d[-1][0] * e1, P[-1][1] + d[-1][1] * e1)
         self.skel.append(("l", list(P)))
+        h = self.w / 2
 
         def nrm(v):
             return (-v[1], v[0])
@@ -244,7 +259,7 @@ class G:
         e1 = rr * rad(25) if c1 == "c" else self._ext(c1)
         s0 -= sg * e0 / rr
         s1 = s0 + sweep + sg * (e0 + e1) / rr
-        ro, ri = rr + W / 2, rr - W / 2
+        ro, ri = rr + self.w / 2, rr - self.w / 2
         self.skel.append(("a", cx, cy, rr, s0, s1))
         p = Path()
         p.moveTo(cx + ro * math.cos(s0), cy + ro * math.sin(s0))
@@ -264,7 +279,7 @@ class G:
             return (x / L, y / L)
 
         u, v = tv(u), tv(v)
-        h = W / 2
+        h = self.w / 2
         cr = u[0] * v[1] - u[1] * v[0]
         s = -1 if cr > 0 else 1
         nu, nv = (-u[1] * s, u[0] * s), (-v[1] * s, v[0] * s)
@@ -283,7 +298,7 @@ class G:
         rr = r * self.k
         self.skel.append(("c", cx, cy, rr))
         p = Path(fillType=FillType.EVEN_ODD)
-        for rad_, ccw in ((rr + W / 2, True), (rr - W / 2, False)):
+        for rad_, ccw in ((rr + self.w / 2, True), (rr - self.w / 2, False)):
             p.moveTo(cx + rad_, cy)
             _arc_to(p, cx, cy, rad_, 0, 2 * math.pi if ccw else -2 * math.pi)
             p.close()
@@ -311,7 +326,13 @@ class G:
         if vlim is not None:
             y0, y1 = self.o[1] - vlim, self.o[1] + vlim
             out = intersect(out, polygon_path([(-3, y0), (3, y0), (3, y1), (-3, y1)]))
+        for p in self.extras:
+            if p.prims or p.extras:
+                out = union(out, p.outline())
         return out
+
+    def empty(self):
+        return not (self.prims or self.extras)
 
 
 # --------------------------------------------------------------------------------------
@@ -627,9 +648,10 @@ def G_(g):
 
 @glyph("H", 0x48)
 def H(g):
-    g.arc((0, 0), 1, 180 - 58, 180 + 58)
-    g.arc((0, 0), 1, -58, 58)
-    g.line((-1, 0), (1, 0))
+    left_stem(g)                      # bowed stems, like B D E F K L P R
+    left_stem(g.flipped(-1, 1))
+    x = stem_x(0)
+    g.line((x, 0), (-x, 0))
 
 
 @glyph("I", 0x49)
@@ -792,9 +814,7 @@ def zero(g):
 @glyph("one", 0x31)
 def one(g):
     g.vlimit(FIG_H)
-    x = 0.12
-    g.line((x, 1.2), (x, -1.2), "c", "c")
-    g.arc((0, 0), FIG_R, math.degrees(math.acos(x / FIG_R)), 145)
+    g.line((0, 1.2), (0, -1.2), "c", "c")
 
 
 @glyph("two", 0x32)
@@ -1200,7 +1220,7 @@ def at(g):
     rh = (xo - rb) / 2
     g.arc((rb + rh, yb), rh, 180, 360)
     a0 = math.degrees(math.atan2(yb, xo))
-    g.arc((0, 0), ro, a0, 290)
+    g.arc((0, 0), ro, a0 - 8, 290)              # overlaps the hook so the join is clean
 
 
 GLYPHS["bracketleft"] = (0x5B, bracket)
@@ -1250,51 +1270,679 @@ def asciitilde(g):
 
 @glyph(".notdef")
 def notdef(g):
+    g.poly([(-0.55, -0.78), (0.55, -0.78), (0.55, 0.78), (-0.55, 0.78), (-0.55, -0.78)], "s", "s")
+
+
+# --------------------------------------------------------------------------------------
+# Extended Latin (Google Fonts Latin Core)
+#
+# Accents are drawn from arcs and lines like everything else, a little lighter than the
+# letters. On lowercase they sit inside the circle; on capitals and ascenders there is
+# no room, so they sit just outside it.
+# --------------------------------------------------------------------------------------
+W_ACC = 0.85 * W                  # accent stroke width
+LC_TOP = XB + 0.065               # attachment height of accents on x-height letters
+CAP_TOP = D + 0.07                # ... on capitals and ascenders (outside the circle)
+LC_BOT = -XB - 0.01               # attachment of marks below the baseline
+CAP_BOT = -D - 0.03               # ... below capitals and descenders
+TALL = 0.7                        # ink above this means "capital or ascender"
+MARK_CENTER = 0.7                 # combining marks: ink centred this far left of origin
+
+MARKS = {}        # name -> dict(draw, kind, uni, spacing=(name, uni))
+
+
+def mark(name, kind, uni=None, spacing=None):
+    def deco(f):
+        MARKS[name] = dict(draw=f, kind=kind, uni=uni, spacing=spacing)
+        return f
+    return deco
+
+
+# ---- the marks, each drawn with its attachment point at (0, 0) ------------------------
+@mark("acutecomb", "top", 0x0301, ("acute", 0x00B4))
+def m_acute(g):
+    arc3(g, (-0.07, 0.0), (0.10, 0.24), 0.03)
+
+
+@mark("gravecomb", "top", 0x0300, ("grave_", None))
+def m_grave(g):
+    arc3(g, (0.07, 0.0), (-0.10, 0.24), -0.03)
+
+
+@mark("circumflexcomb", "top", 0x0302, ("circumflex", 0x02C6))
+def m_circumflex(g):
+    pointed(g, (-0.20, 0.0), (0.20, 0.0), (0.0, 0.21), 0.035, "f")
+
+
+@mark("caroncomb", "top", 0x030C, ("caron", 0x02C7))
+def m_caron(g):
+    pointed(g, (-0.20, 0.21), (0.20, 0.21), (0.0, 0.0), -0.035, "f")
+
+
+@mark("tildecomb", "top", 0x0303, ("tilde", 0x02DC))
+def m_tilde(g):
+    rr, y = 0.11, 0.09
+    g.arc((-rr, y), rr, 208, 0)
+    g.arc((rr, y), rr, 180, 388)
+
+
+@mark("macroncomb", "top", 0x0304, ("macron", 0x00AF))
+def m_macron(g):
+    arc3(g, (-0.22, 0.07), (0.22, 0.07), -0.025)
+
+
+@mark("brevecomb", "top", 0x0306, ("breve", 0x02D8))
+def m_breve(g):
+    g.arc((0, 0.21), 0.19, 195, 345)
+
+
+@mark("dotaccentcomb", "top", 0x0307, ("dotaccent", 0x02D9))
+def m_dot(g):
+    g.dot((0, DOT * 0.9), DOT * 0.9)
+
+
+@mark("dieresiscomb", "top", 0x0308, ("dieresis", 0x00A8))
+def m_dieresis(g):
+    for x in (-0.17, 0.17):
+        g.dot((x, DOT * 0.9), DOT * 0.9)
+
+
+@mark("ringcomb", "top", 0x030A, ("ring", 0x02DA))
+def m_ring(g):
+    g.ring((0, 0.13 + W_ACC / 2), 0.13)
+
+
+@mark("hungarumlautcomb", "top", 0x030B, ("hungarumlaut", 0x02DD))
+def m_hungarumlaut(g):
+    for x in (-0.12, 0.14):
+        arc3(g, (x - 0.06, 0.0), (x + 0.08, 0.22), 0.025)
+
+
+@mark("commaturnedabovecomb", "top", 0x0312)
+def m_commaturned(g):
+    g.dot((0, 0.10), 0.085)
+    arc3(g, (-0.03, 0.10), (0.09, 0.30), -0.035)
+
+
+@mark("caroncomb.alt", "caronalt")
+def m_caronalt(g):
+    arc3(g, (0.03, 0.25), (-0.03, 0.0), -0.035)
+
+
+@mark("cedillacomb", "bottom", 0x0327, ("cedilla", 0x00B8))
+def m_cedilla(g):
+    g.arc((-0.02, -0.16), 0.13, 100, -150)
+
+
+@mark("commaaccentcomb", "bottom", 0x0326)
+def m_commabelow(g):
+    g.dot((0, -0.13), 0.085)
+    arc3(g, (0.03, -0.13), (-0.09, -0.34), -0.035)
+
+
+@mark("ogonekcomb", "ogonek", 0x0328, ("ogonek", 0x02DB))
+def m_ogonek(g):
+    g.arc((0.10, -0.10), 0.14, 135, 300)
+
+
+def mark_attach_y(kind):
+    """Where a mark sits in its own combining glyph (the lowercase position)."""
+    return {"top": LC_TOP, "caronalt": LC_TOP, "bottom": LC_BOT, "ogonek": LC_BOT}[kind]
+
+
+def draw_mark(g, name, x, y):
+    MARKS[name]["draw"](g.part(x, y, w=W_ACC))
+
+
+def _register_marks():
+    for name, m in MARKS.items():
+        y = mark_attach_y(m["kind"])
+        fn = (lambda nm, yy: (lambda g: draw_mark(g, nm, 0.0, yy)))(name, y)
+        GLYPHS[name] = (m["uni"], fn)
+        if m["spacing"]:
+            sname, suni = m["spacing"]
+            if suni is not None:
+                GLYPHS[sname] = (suni, fn)
+
+
+# ---- special letters -----------------------------------------------------------------
+@glyph("dotlessi", 0x0131)
+def dotlessi(g):
+    g.line((0, -XB), (0, XB))
+
+
+@glyph("dotlessj", 0x0237)
+def dotlessj(g):
+    x, cy, r = 0.15, -0.5, 0.35
+    g.line((x, XB), (x, cy))
+    g.arc((x - r, cy), r, 0, -180)
+
+
+@glyph("AE", 0x00C6)
+def AE(g):
+    fl, ap = pc(-124), (0.0, 1.0)
+    cl, rl, _, _ = arc3(g, fl, ap, LANCET, "c", 0.2)
+    g.line((0, 1.2), (0, -1.2), "c", "c")
+    g.arc((0, 0), 1, 90, 40)
+    g.arc((0, 0), 1, 270, 320)
+    g.line((0, 0), (0.48, 0))
+    y = -0.3
+    g.line((x_on(cl, rl, y, -1), y), (0, y))
+
+
+@glyph("OE", 0x0152)
+def OE(g):
+    g.arc((0, 0), 1, 90, 270)
+    g.line((0, 1.2), (0, -1.2), "c", "c")
+    g.arc((0, 0), 1, 90, 40)
+    g.arc((0, 0), 1, 270, 320)
+    g.line((0, 0), (0.48, 0))
+
+
+@glyph("ae", 0x00E6)
+def ae(g):
+    g.ring((-0.48, 0), XR)
+    g.line((0.02, -XB), (0.02, XB))
+    g.arc((0.5, 0), XR, 0, 315)
+    g.line((0.0, 0), (1.2, 0), "f", "c")
+
+
+@glyph("oe", 0x0153)
+def oe(g):
+    g.ring((-0.48, 0), XR)
+    g.arc((0.5, 0), XR, 0, 315)
+    g.line((0.0, 0), (1.2, 0), "f", "c")
+
+
+@glyph("Oslash", 0x00D8)
+def Oslash(g):
     g.ring((0, 0), 1)
-    g.line(pc(225), pc(45), "c", "c")
+    g.line(pc(232), pc(52), "c", "c")
+
+
+@glyph("oslash", 0x00F8)
+def oslash(g):
+    g.ring((0, 0), XR)
+    g.line((-0.5, -0.62), (0.5, 0.62))
+
+
+@glyph("Eth", 0x00D0)
+def Eth(g):
+    GLYPHS["D"][1](g)
+    g.line((-0.82, 0), (-0.22, 0))
+
+
+GLYPHS["Dcroat"] = (0x0110, Eth)
+
+
+@glyph("dcroat", 0x0111)
+def dcroat(g):
+    GLYPHS["d"][1](g)
+    g.line((0.22, 0.80), (1.0, 0.80), "f", "c")
+
+
+@glyph("eth", 0x00F0)
+def eth(g):
+    g.ring((0, 0), XR)
+    tarc(g, pc(15, XR), arc_dir(15, False), (-0.26, 0.98))
+    g.line((-0.20, 0.60), (0.30, 0.88))
+
+
+@glyph("Hbar", 0x0126)
+def Hbar(g):
+    H(g)
+    g.line((-0.76, 0.5), (0.76, 0.5))
+
+
+@glyph("hbar", 0x0127)
+def hbar(g):
+    GLYPHS["h"][1](g)
+    g.line((-0.78, 0.80), (-0.20, 0.80))
+
+
+@glyph("Lslash", 0x0141)
+def Lslash(g):
+    GLYPHS["L"][1](g)
+    g.line((-0.82, -0.22), (-0.24, 0.22))
+
+
+@glyph("lslash", 0x0142)
+def lslash(g):
+    GLYPHS["l"][1](g)
+    g.line((-0.36, 0.12), (0.14, 0.52))
+
+
+def thorn_bowl(g, y_top, y_low, reach):
+    p0, p1 = (stem_x(y_top), y_top), (stem_x(y_low), y_low)
+    lo, hi = 0.2, 1.4
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        c, r = arc_circle(p0, p1, mid)
+        if c[0] + r > reach:
+            hi = mid
+        else:
+            lo = mid
+    arc3(g, p0, p1, (lo + hi) / 2)
+
+
+@glyph("Thorn", 0x00DE)
+def Thorn(g):
+    left_stem(g)
+    thorn_bowl(g, 0.55, -0.45, 0.5)
+
+
+@glyph("thorn", 0x00FE)
+def thorn(g):
+    g.ring((0, 0), XR)
+    g.line((-XR, 2), (-XR, -2), "c", "c")
+
+
+@glyph("germandbls", 0x00DF)
+def germandbls(g):
+    x0, c1, r1 = -0.42, (-0.07, 0.55), 0.35
+    g.line((x0, -XB), (x0, c1[1]))
+    g.arc(c1, r1, 180, -40)
+    p = pc(-40, r1, c1)
+    biarc(g, p, arc_dir(-40, True), (0.46, -0.10), (0, -1))
+    g.arc((0.0, -0.10), 0.46, 0, -140)
+
+
+@glyph("Germandbls", 0x1E9E)
+def Germandbls(g):
+    left_stem(g)
+    g.arc((0, 0), 1, STEM_A, 52)
+    cb, rb = (0.02, -0.46), 0.50
+    start = pc(100, rb, cb)
+    arc3(g, pc(52), start, 0.06, "c", "f")
+    g.arc(cb, rb, 100, -148)
+
+
+@glyph("dottedCircle", 0x25CC)
+def dotted_circle(g):
+    for i_ in range(12):
+        g.dot(pc(90 + 30 * i_, 0.42), 0.055)
+
+
+# ---- punctuation and symbols ----------------------------------------------------------
+GLYPHS["exclamdown"] = (0x00A1, mirror(exclam, -1, -1))
+GLYPHS["questiondown"] = (0x00BF, mirror(question, -1, -1))
+
+
+@glyph("cent", 0x00A2)
+def cent(g):
+    g.arc((0, 0), XR, 45, 315)
+    g.line((0.04, -0.80), (0.04, 0.80))
+
+
+@glyph("sterling", 0x00A3)
+def sterling(g):
+    g.vlimit(FIG_H)
+    ch, rh = (0.12, FIG_R - 0.32), 0.32
+    g.arc(ch, rh, 20, 180)
+    top = pc(180, rh, ch)
+    q = pc(232, FIG_R)
+    res = tarc(g, top, (0, -1), q)
+    g.arc((0, 0), FIG_R, 232, 312)
+    g.corner(q, end_dir(res[0], res[2], res[3]), arc_dir(232, False))
+    g.line((-0.52, -0.04), (0.20, -0.04))
+
+
+@glyph("yen", 0x00A5)
+def yen(g):
+    g.vlimit(FIG_H)
+    j = (0, 0.02)
+    arc3(g, pc(127), j, -LANCET, "c", 0.06)
+    arc3(g, pc(53), j, LANCET, "c", 0.06)
+    g.line(j, (0, -1.2), "f", "c")
+    for y in (-0.16, -0.44):
+        g.line((-0.40, y), (0.40, y))
+
+
+@glyph("Euro", 0x20AC)
+def Euro(g):
+    g.vlimit(FIG_H)
+    g.arc((0.08, 0), FIG_R - 0.06, 48, 312)
+    for y, x1 in ((0.16, 0.26), (-0.16, 0.16)):
+        g.line((-0.90, y), (x1, y))
+
+
+@glyph("section", 0x00A7)
+def section(g):
+    r = 0.27
+    g.ring((0, 0), r)
+    g.arc((0, 2 * r), r, 20, 270)
+    g.arc((0, -2 * r), r, 200, 450)
+
+
+@glyph("paragraph", 0x00B6)
+def paragraph(g):
+    y = 0.86
+    g.arc((0.06, y - 0.38), 0.38, 90, 270)
+    g.line((0.06, y), (0.34, y))
+    g.line((0.06, y), (0.06, -0.86))
+    g.line((0.34, y), (0.34, -0.86))
+
+
+def inset(g, letter, k_mul, dx=0.0, dy=0.0, w=None):
+    GLYPHS[letter][1](g.part(dx, dy, k_mul, w))
+
+
+@glyph("copyright", 0x00A9)
+def copyright_(g):
+    g.ring((0, 0), 0.86)
+    inset(g, "C", 0.46, w=W * 0.85)
+
+
+@glyph("registered", 0x00AE)
+def registered(g):
+    g.ring((0, 0), 0.86)
+    inset(g, "R", 0.46, w=W * 0.85)
+
+
+@glyph("trademark", 0x2122)
+def trademark(g):
+    inset(g, "T", 0.33, -0.37, 0.62, W * 0.75)
+    inset(g, "M", 0.33, 0.37, 0.62, W * 0.75)
+
+
+@glyph("ordfeminine", 0x00AA)
+def ordfeminine(g):
+    p = g.part(0, 0.72, 0.5, W * 0.85)
+    a(p)
+    g.line((-0.30, 0.24), (0.30, 0.24))
+
+
+@glyph("ordmasculine", 0x00BA)
+def ordmasculine(g):
+    p = g.part(0, 0.72, 0.5, W * 0.85)
+    o(p)
+    g.line((-0.30, 0.24), (0.30, 0.24))
+
+
+@glyph("degree", 0x00B0)
+def degree(g):
+    g.part(0, 0.78, w=W_ACC).ring((0, 0), 0.17)
+
+
+@glyph("periodcentered", 0x00B7)
+def periodcentered(g):
+    g.dot((0, 0))
+
+
+@glyph("bullet", 0x2022)
+def bullet(g):
+    g.dot((0, 0), 0.2)
+
+
+@glyph("ellipsis", 0x2026)
+def ellipsis(g):
+    for x in (-0.46, 0.0, 0.46):
+        g.dot((x, BASE_DOT[1]))
+
+
+@glyph("endash", 0x2013)
+def endash(g):
+    g.line((-0.60, 0), (0.60, 0))
+
+
+@glyph("emdash", 0x2014)
+def emdash(g):
+    g.line((-1.04, 0), (1.04, 0))
+
+
+@glyph("minus", 0x2212)
+def minus(g):
+    g.line((-0.45, 0), (0.45, 0))
+
+
+@glyph("multiply", 0x00D7)
+def multiply(g):
+    g.line((-0.32, -0.32), (0.32, 0.32))
+    g.line((-0.32, 0.32), (0.32, -0.32))
+
+
+@glyph("divide", 0x00F7)
+def divide(g):
+    g.line((-0.45, 0), (0.45, 0))
+    g.dot((0, 0.30))
+    g.dot((0, -0.30))
+
+
+def comma_shape(g):
+    g.dot(BASE_DOT)
+    arc3(g, (0.04, BASE_DOT[1]), (-0.16, -0.84), -0.06)
+
+
+QUOTE_DY = 0.86 - BASE_DOT[1]     # lifts a comma so its dot sits near the top of the circle
+
+
+def quote_right(g, x):
+    comma_shape(g.part(x, QUOTE_DY))
+
+
+def quote_left(g, x):
+    comma_shape(g.part(x, 0.10).flipped(-1, -1))
+
+
+@glyph("quoteright", 0x2019)
+def quoteright(g):
+    quote_right(g, 0)
+
+
+@glyph("quoteleft", 0x2018)
+def quoteleft(g):
+    quote_left(g, 0)
+
+
+@glyph("quotedblright", 0x201D)
+def quotedblright(g):
+    for x in (-0.2, 0.2):
+        quote_right(g, x)
+
+
+@glyph("quotedblleft", 0x201C)
+def quotedblleft(g):
+    for x in (-0.2, 0.2):
+        quote_left(g, x)
+
+
+@glyph("quotesinglbase", 0x201A)
+def quotesinglbase(g):
+    comma_shape(g)
+
+
+@glyph("quotedblbase", 0x201E)
+def quotedblbase(g):
+    for x in (-0.2, 0.2):
+        comma_shape(g.part(x, 0))
+
+
+def guil(g, x):
+    pointed(g, (x + 0.17, 0.24), (x + 0.17, -0.24), (x - 0.17, 0.0), -0.05, "f")
+
+
+GLYPHS["guilsinglleft"] = (0x2039, lambda g: guil(g, 0))
+GLYPHS["guilsinglright"] = (0x203A, lambda g: guil(g.flipped(-1, 1), 0))
+GLYPHS["guillemetleft"] = (0x00AB, lambda g: (guil(g, -0.17), guil(g, 0.17)))
+GLYPHS["guillemetright"] = (0x00BB, lambda g: (guil(g.flipped(-1, 1), -0.17), guil(g.flipped(-1, 1), 0.17)))
+
+
+# ---- accented letters -----------------------------------------------------------------
+# Each is the base letter plus marks placed at anchors; in the Regular UFO they are
+# stored as components, in Ring and Coin as outlines.
+TOP_X = {"c": 0.0, "C": 0.0, "G": 0.0, "L": -0.30, "l": -0.12, "t": -0.10, "r": -0.05,
+         "J": 0.10, "j": 0.15, "dotlessj": 0.15}
+BOTTOM_X = {"t": -0.02, "L": 0.10, "l": 0.0, "T": 0.0, "g": 0.0, "G": 0.08}
+OGONEK_AT = {"A": (0.60, -0.84), "a": (0.50, -XB + 0.03), "E": (0.40, -0.94), "e": (0.20, -XB + 0.04),
+             "I": (0.0, -0.98), "i": (0.0, -XB + 0.03), "dotlessi": (0.0, -XB + 0.03),
+             "U": (0.32, -0.97), "u": (0.50, -XB + 0.03), "dottedCircle": (0.26, -0.40)}
+CARONALT_AT = {"d": (0.76, 0.66), "l": (0.18, 0.66), "t": (0.22, 0.60), "L": (-0.20, 0.60)}
+
+COMB = {0x0300: "gravecomb", 0x0301: "acutecomb", 0x0302: "circumflexcomb", 0x0303: "tildecomb",
+        0x0304: "macroncomb", 0x0306: "brevecomb", 0x0307: "dotaccentcomb", 0x0308: "dieresiscomb",
+        0x030A: "ringcomb", 0x030B: "hungarumlautcomb", 0x030C: "caroncomb", 0x0326: "commaaccentcomb",
+        0x0327: "cedillacomb", 0x0328: "ogonekcomb"}
+COMMA_BELOW_LETTERS = set("GKLNRgklnr")      # Latvian: U+0327 is drawn as a comma below
+CARONALT_LETTERS = set("dltL")               # ď ľ ť Ľ use the vertical caron
+
+COMPOSITES = {}     # name -> (codepoint, base, [(mark, anchor_name)])
+
+_ANCHOR_CACHE = {}
+
+
+def base_bounds(base):
+    if base not in _ANCHOR_CACHE:
+        g = G()
+        GLYPHS[base][1](g)
+        _ANCHOR_CACHE[base] = path_bounds(g.outline())
+    return _ANCHOR_CACHE[base]
+
+
+def anchor(base, kind):
+    """Design-unit attachment point on a base glyph for a mark of this kind."""
+    x0, y0, x1, y1 = base_bounds(base)
+    if kind == "top":
+        return (TOP_X.get(base, (x0 + x1) / 2), CAP_TOP if y1 > TALL else LC_TOP)
+    if kind == "bottom":
+        return (BOTTOM_X.get(base, (x0 + x1) / 2), CAP_BOT if y0 < -TALL else LC_BOT)
+    if kind == "ogonek":
+        return OGONEK_AT[base]
+    if kind == "caronalt":
+        return CARONALT_AT[base]
+    raise KeyError(kind)
+
+
+def glyph_name_for(cp):
+    from fontTools.agl import UV2AGL
+    special = {0x0110: "Dcroat", 0x0111: "dcroat", 0x0122: "Gcommaaccent", 0x0123: "gcommaaccent",
+               0x0136: "Kcommaaccent", 0x0137: "kcommaaccent", 0x013B: "Lcommaaccent",
+               0x013C: "lcommaaccent", 0x0145: "Ncommaaccent", 0x0146: "ncommaaccent",
+               0x0156: "Rcommaaccent", 0x0157: "rcommaaccent", 0x0218: "Scommaaccent",
+               0x0219: "scommaaccent", 0x021A: "Tcommaaccent", 0x021B: "tcommaaccent",
+               0x0130: "Idotaccent", 0x1E80: "Wgrave", 0x1E81: "wgrave", 0x1E82: "Wacute",
+               0x1E83: "wacute", 0x1E84: "Wdieresis", 0x1E85: "wdieresis", 0x1EF2: "Ygrave",
+               0x1EF3: "ygrave", 0x0150: "Ohungarumlaut", 0x0151: "ohungarumlaut",
+               0x0170: "Uhungarumlaut", 0x0171: "uhungarumlaut"}
+    return special.get(cp) or UV2AGL.get(cp) or f"uni{cp:04X}"
+
+
+def _add_composites():
+    import unicodedata
+    for cp in LATIN_CORE_COMPOSITES:
+        dec = unicodedata.decomposition(chr(cp)).split()
+        base_ch, marks = chr(int(dec[0], 16)), [int(m, 16) for m in dec[1:]]
+        base = glyph_name_for(ord(base_ch))
+        out = []
+        for m in marks:
+            mname = COMB[m]
+            kind = MARKS[mname]["kind"]
+            if m == 0x0327 and base_ch in COMMA_BELOW_LETTERS:
+                if base_ch == "g":
+                    mname, kind = "commaturnedabovecomb", "top"
+                else:
+                    mname, kind = "commaaccentcomb", "bottom"
+            if m == 0x030C and base_ch in CARONALT_LETTERS:
+                mname, kind = "caroncomb.alt", "caronalt"
+            if kind == "top" and base_ch in "ij":
+                base = "dotlessi" if base_ch == "i" else "dotlessj"
+            out.append((mname, kind))
+        COMPOSITES[glyph_name_for(cp)] = (cp, base, out)
+
+
+def composite_fn(base, marks):
+    def fn(g):
+        GLYPHS[base][1](g)
+        for mname, kind in marks:
+            x, y = anchor(base, kind)
+            draw_mark(g, mname, x, y)
+    return fn
+
+
+LATIN_CORE_COMPOSITES = [
+    0x00C0, 0x00C1, 0x00C2, 0x00C3, 0x00C4, 0x00C5, 0x00C7, 0x00C8, 0x00C9, 0x00CA, 0x00CB, 0x00CC,
+    0x00CD, 0x00CE, 0x00CF, 0x00D1, 0x00D2, 0x00D3, 0x00D4, 0x00D5, 0x00D6, 0x00D9, 0x00DA, 0x00DB,
+    0x00DC, 0x00DD, 0x00E0, 0x00E1, 0x00E2, 0x00E3, 0x00E4, 0x00E5, 0x00E7, 0x00E8, 0x00E9, 0x00EA,
+    0x00EB, 0x00EC, 0x00ED, 0x00EE, 0x00EF, 0x00F1, 0x00F2, 0x00F3, 0x00F4, 0x00F5, 0x00F6, 0x00F9,
+    0x00FA, 0x00FB, 0x00FC, 0x00FD, 0x00FF, 0x0100, 0x0101, 0x0102, 0x0103, 0x0104, 0x0105, 0x0106,
+    0x0107, 0x010A, 0x010B, 0x010C, 0x010D, 0x010E, 0x010F, 0x0112, 0x0113, 0x0116, 0x0117, 0x0118,
+    0x0119, 0x011A, 0x011B, 0x011E, 0x011F, 0x0120, 0x0121, 0x0122, 0x0123, 0x012A, 0x012B, 0x012E,
+    0x012F, 0x0130, 0x0136, 0x0137, 0x0139, 0x013A, 0x013B, 0x013C, 0x013D, 0x013E, 0x0143, 0x0144,
+    0x0145, 0x0146, 0x0147, 0x0148, 0x0150, 0x0151, 0x0154, 0x0155, 0x0158, 0x0159, 0x015A, 0x015B,
+    0x015E, 0x015F, 0x0160, 0x0161, 0x0164, 0x0165, 0x016A, 0x016B, 0x016E, 0x016F, 0x0170, 0x0171,
+    0x0172, 0x0173, 0x0174, 0x0175, 0x0176, 0x0177, 0x0178, 0x0179, 0x017A, 0x017B, 0x017C, 0x017D,
+    0x017E, 0x0218, 0x0219, 0x021A, 0x021B, 0x1E80, 0x1E81, 0x1E82, 0x1E83, 0x1E84, 0x1E85, 0x1EF2,
+    0x1EF3,
+]
+
+_register_marks()
+_add_composites()
+COMPOSITES["iogonek.dotless"] = (None, "dotlessi", [("ogonekcomb", "ogonek")])   # į under accents
+for _n, (_cp, _b, _m) in COMPOSITES.items():
+    GLYPHS[_n] = (_cp, composite_fn(_b, _m))
 
 
 # --------------------------------------------------------------------------------------
 # Styles and font assembly
+#
+# This script writes UFO sources (sources/ufo/*.ufo); gftools builder compiles them
+# (see sources/config*.yaml and sources/build.sh).
 # --------------------------------------------------------------------------------------
 STYLES = {
-    # name: (k, mode)
-    "Regular": dict(k=1.0, mode="open"),
-    "Ring": dict(k=0.70, mode="ring"),
-    "Coin": dict(k=0.74, mode="coin"),
+    "Regular": dict(k=1.0, mode="open", family=FAMILY),
+    "Ring": dict(k=0.70, mode="ring", family=f"{FAMILY} Ring"),
+    "Coin": dict(k=0.74, mode="coin", family=f"{FAMILY} Coin"),
 }
 CELL_SB = 0.08
+FIT = {"ring": D - W - 0.10, "coin": D - 0.24}   # glyphs that reach past this radius are shrunk
+
+
+def is_mark(name):
+    return name in MARKS and MARKS[name]["uni"] is not None
+
+
+def _max_radius(path):
+    from fontTools.pens.recordingPen import RecordingPen
+    rp = RecordingPen()
+    path.draw(rp)
+    r = 0.0
+    for _, pts in rp.value:
+        for pt in pts:
+            if pt is not None:
+                r = max(r, math.hypot(*pt))
+    return r
+
+
+def _draw(name, k):
+    g = G(k=k)
+    GLYPHS[name][1](g)
+    return Path() if g.empty() else g.outline()
 
 
 def glyph_outline(name, k, mode):
-    _, fn = GLYPHS[name]
-    g = G(k=k)
-    fn(g)
-    body = g.outline() if g.prims else Path()
+    """Final outline in design units (ring added / letter knocked out for Ring and Coin)."""
+    body = _draw(name, k)
+    if mode in FIT and not is_mark(name) and path_bounds(body) is not None:
+        rmax = _max_radius(body)
+        if rmax > FIT[mode]:                 # e.g. accented capitals: shrink to fit the ring
+            k2 = k * (FIT[mode] - W / 2) / (rmax - W / 2)
+            body = _draw(name, k2)
+    if is_mark(name) or mode == "open":
+        return body
     if mode == "ring":
         frame = Path(fillType=FillType.EVEN_ODD)
         for rad_, ccw in ((D, True), (D - W, False)):
             frame.moveTo(rad_, 0)
             _arc_to(frame, 0, 0, rad_, 0, 2 * math.pi if ccw else -2 * math.pi)
             frame.close()
-        body = union(frame, body) if g.prims else pathops.op(frame, Path(), PathOp.UNION)
-    elif mode == "coin":
-        disc = circle_path(0, 0, D)
-        body = difference(disc, body) if g.prims else pathops.op(disc, Path(), PathOp.UNION)
-    return body
+        return union(frame, body)
+    disc = circle_path(0, 0, D)
+    return difference(disc, body)
 
 
 def path_bounds(path):
     bp = BoundsPen(None)
     path.draw(bp)
     return bp.bounds
-
-
-def draw_ttglyph(path, dx, dy):
-    pen = TTGlyphPen(None)
-    tp = TransformPen(Cu2QuPen(pen, 0.5, reverse_direction=False), (S, 0, 0, S, dx, dy))
-    path.draw(tp)
-    return pen.glyph()
 
 
 def signed_area(path):
@@ -1346,7 +1994,7 @@ def mono_cell(mode):
 
 
 def mono_glyphs(mode):
-    """-> list of (name, path, dx, advance)."""
+    """-> list of (name, design path, dx in font units, advance)."""
     adv, cx = mono_cell(mode)
     out = [("monogram.ring", mono_ring_path(), cx, adv), ("monogram.end", Path(), 0, 0)]
     for L in MONO_LETTERS:
@@ -1375,197 +2023,35 @@ def mono_fea():
     return "\n".join(lines) + "\n"
 
 
-def _panose(proportion):
-    from fontTools.ttLib.tables.O_S_2f_2 import Panose
-    p = Panose()
-    p.bFamilyType, p.bSerifStyle, p.bWeight, p.bProportion = 2, 11, 5, proportion
-    p.bContrast = p.bStrokeVariation = p.bArmStyle = p.bLetterForm = p.bMidline = p.bXHeight = 0
-    return p
+def ccmp_fea():
+    """i and j (and i with ogonek) lose their dots under accents typed as combining marks,
+    including when a mark below comes between."""
+    tops = " ".join(n for n, m in MARKS.items() if m["uni"] and m["kind"] == "top")
+    bottoms = " ".join(n for n, m in MARKS.items() if m["uni"] and m["kind"] in ("bottom", "ogonek"))
+    return (f"@TOP_MARKS = [{tops}];\n"
+            f"@BOTTOM_MARKS = [{bottoms}];\n"
+            "lookup DOTLESS { sub i by dotlessi; sub j by dotlessj; sub iogonek by iogonek.dotless; } DOTLESS;\n"
+            "feature ccmp {\n"
+            "  sub [i j iogonek]' lookup DOTLESS @TOP_MARKS;\n"
+            "  sub [i j iogonek]' lookup DOTLESS @BOTTOM_MARKS @TOP_MARKS;\n"
+            "  sub [i j iogonek]' lookup DOTLESS @BOTTOM_MARKS @BOTTOM_MARKS @TOP_MARKS;\n"
+            "} ccmp;\n")
 
 
-PANOSE_PROP = _panose(3)      # Latin text, sans, book weight, modern proportions
-PANOSE_MONO = _panose(9)      # same, monospaced
-
-MATH_SIGNS = ["plus", "less", "equal", "greater", "asciitilde"]
-
-
-def equalize_math_signs(font):
-    """Give the math signs one shared advance, each glyph centred in it."""
-    hmtx, glyf = font["hmtx"], font["glyf"]
-    names = [n for n in MATH_SIGNS if n in hmtx.metrics]
-    adv = max(hmtx[n][0] for n in names)
-    for n in names:
-        g = glyf[n]
-        w = g.xMax - g.xMin
-        lsb = round((adv - w) / 2)
-        shift = lsb - g.xMin
-        if shift:
-            g.coordinates.translate((shift, 0))
-            g.recalcBounds(glyf)
-        hmtx[n] = (adv, g.xMin)
-
-
-def autohint(path):
-    """Hint with ttfautohint (also turns on smart dropout control)."""
-    from ttfautohint import ttfautohint
-    tmp = path + ".hinted"
-    ttfautohint(in_file=path, out_file=tmp)
-    f = TTFont(tmp)
-    f["head"].flags |= 1 << 3          # hinted fonts must round ppem to integers
-    f.save(path)
-    os.remove(tmp)
-
-
-def drop_zero_length_segments(glyf, order):
-    """Remove repeated on-curve points (zero-length segments left by coordinate rounding)."""
-    from fontTools.ttLib.tables._g_l_y_f import GlyphCoordinates
-    for name in order:
-        g = glyf[name]
-        if g.numberOfContours <= 0:
-            continue
-        coords, flags, ends = list(g.coordinates), list(g.flags), list(g.endPtsOfContours)
-        new_c, new_f, new_e, start = [], [], [], 0
-        for end in ends:
-            pts = list(zip(coords[start:end + 1], flags[start:end + 1]))
-            out = []
-            for p, fl in pts:
-                if out and fl & 1 and out[-1][1] & 1 and tuple(out[-1][0]) == tuple(p):
-                    continue
-                out.append((p, fl))
-            while len(out) > 1 and out[0][1] & 1 and out[-1][1] & 1 and tuple(out[0][0]) == tuple(out[-1][0]):
-                out.pop()
-            new_c += [p for p, _ in out]
-            new_f += [fl for _, fl in out]
-            new_e.append(len(new_c) - 1)
-            start = end + 1
-        if len(new_c) != len(coords):
-            g.coordinates = GlyphCoordinates(new_c)
-            g.flags = bytearray(new_f)
-            g.endPtsOfContours = new_e
-            g.recalcBounds(glyf)
-
-
-def build_style(style, outdir, webdir=None):
-    webdir = webdir or outdir
-    cfg = STYLES[style]
-    k, mode = cfg["k"], cfg["mode"]
-    order = [".notdef", "space"] + [n for n in GLYPHS if n not in (".notdef", "space")]
-    glyf, metrics, cmap = {}, {}, {}
-    cell = (2 * D + 2 * CELL_SB) * S
-    for name in order:
-        uni, _ = GLYPHS[name]
-        if name == "space":
-            path = Path()
-        else:
-            path = glyph_outline(name, k, mode)
-        # TrueType wants clockwise outer contours (negative area in y-up space)
-        if path_bounds(path) is not None and signed_area(path) > 0:
-            path.reverse()
-        dy = BASE * S
-        if mode == "open":
-            if name == "space":
-                adv = round(0.62 * S)
-                dx = 0
-            else:
-                b = path_bounds(path)
-                dx = (SB - b[0]) * S
-                adv = round((b[2] - b[0] + 2 * SB) * S)
-        else:
-            dx = (D + CELL_SB) * S
-            adv = round(cell)
-        tg = draw_ttglyph(path, dx, dy)
-        glyf[name] = tg
-        if uni is not None:
-            cmap[uni] = name
-    cmap[0xA0] = "space"
-
-    fixed_adv = {}
-    if mode in MONO_MODES:
-        for name, path, dx, adv in mono_glyphs(mode):
-            if path_bounds(path) is not None and signed_area(path) > 0:
-                path.reverse()
-            glyf[name] = draw_ttglyph(path, dx, BASE * S)
-            order.append(name)
-            fixed_adv[name] = adv
-
-    fb = FontBuilder(UPM, isTTF=True)
-    fb.setupGlyphOrder(order)
-    fb.setupCharacterMap(cmap)
-    fb.setupGlyf(glyf)
-    glyf_t = fb.font["glyf"]
-    drop_zero_length_segments(glyf_t, order)
-    for name in order:
-        g_ = glyf_t[name]
-        g_.recalcBounds(glyf_t)
-        lsb = getattr(g_, "xMin", 0) if g_.numberOfContours else 0
-        adv = fixed_adv[name] if name in fixed_adv else adv_of(name, glyf_t, mode, cell)
-        metrics[name] = (adv, lsb)
-    fb.setupHorizontalMetrics(metrics)
-    asc, desc = 780, -300
-    fb.setupHorizontalHeader(ascent=asc, descent=desc, lineGap=0)
-    fam = FAMILY if style == "Regular" else f"{FAMILY} {style}"
-    ps = f"{FAMILY}{'' if style == 'Regular' else style}-Regular"
-    fb.setupNameTable({
-        "familyName": fam,
-        "styleName": "Regular",
-        "uniqueFontIdentifier": f"{VERSION};{ps}",
-        "fullName": fam,
-        "psName": ps,
-        "version": f"Version {VERSION}",
-        "copyright": COPYRIGHT,
-        "licenseDescription": "This Font Software is licensed under the SIL Open Font License, Version 1.1. "
-                              "This license is available with a FAQ at: https://openfontlicense.org",
-        "manufacturer": "The Rondel Project Authors",
-        "vendorURL": REPO_URL,
-        "licenseInfoURL": "https://openfontlicense.org",
-        "designer": "RV",
-        "description": "Every glyph inscribed in one circle; built only from circle arcs and straight lines.",
-        "typographicFamily": FAMILY,
-        "typographicSubfamily": style,
-    }, mac=False)
-    fb.setupOS2(
-        sTypoAscender=asc, sTypoDescender=desc, sTypoLineGap=0,
-        usWinAscent=asc, usWinDescent=-desc,
-        sxHeight=round(2 * XB * S), sCapHeight=round((D + BASE) * S),
-        fsType=0, achVendID="RNDL", usWeightClass=400,
-        fsSelection=0x40 | 0x80, version=4,
-        ulCodePageRange1=1, ulCodePageRange2=0,          # Latin 1
-        panose=PANOSE_MONO if mode != "open" else PANOSE_PROP,
-    )
-    fb.setupPost(isFixedPitch=0 if mode == "open" else 1,
-                 underlinePosition=-120, underlineThickness=round(W * S * 0.6))
-    from fontTools.misc.timeTools import timestampNow
-    fb.setupHead(unitsPerEm=UPM, fontRevision=float(VERSION), created=timestampNow(), modified=timestampNow())
-    if mode == "open":
-        equalize_math_signs(fb.font)
-    fea = "languagesystem DFLT dflt;\nlanguagesystem latn dflt;\n"
-    if mode == "open":
-        fea += auto_kern(fb.font, order)
-    if mode in MONO_MODES:
-        fea += mono_fea()
-    if mode == "open" or mode in MONO_MODES:
-        from fontTools.feaLib.builder import addOpenTypeFeaturesFromString
-        addOpenTypeFeaturesFromString(fb.font, fea)
-    os.makedirs(outdir, exist_ok=True)
-    os.makedirs(webdir, exist_ok=True)
-    base = f"{FAMILY}{'' if style == 'Regular' else style}-Regular"
-    ttf_path = os.path.join(outdir, base + ".ttf")
-    fb.save(ttf_path)
-    if not os.environ.get("RONDEL_NO_HINT"):
-        autohint(ttf_path)
-    f = TTFont(ttf_path)
-    f.flavor = "woff2"
-    f.save(os.path.join(webdir, base + ".woff2"))
-    return ttf_path
+PANOSE_PROP = [2, 11, 5, 3, 0, 0, 0, 0, 0, 0]   # Latin text, sans, book weight, modern proportions
+PANOSE_MONO = [2, 11, 5, 9, 0, 0, 0, 0, 0, 0]   # same, monospaced
+MATH_SIGNS = ["plus", "minus", "less", "equal", "greater", "asciitilde", "multiply", "divide"]
 
 
 # --------------------------------------------------------------------------------------
-# Auto-kerning (open style): close up pairs whose facing profiles leave excess space
+# Spacing and kerning
 # --------------------------------------------------------------------------------------
-KERN_SET = (list("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz")
-            + ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-               "period", "comma", "colon", "semicolon", "hyphen", "quotesingle", "quotedbl",
-               "parenleft", "parenright", "slash", "exclam", "question", "ampersand"])
+KERN_EXTRA = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+              "period", "comma", "colon", "semicolon", "hyphen", "endash", "emdash",
+              "quotesingle", "quotedbl", "quoteleft", "quoteright", "quotedblleft", "quotedblright",
+              "quotesinglbase", "quotedblbase", "guilsinglleft", "guilsinglright",
+              "guillemetleft", "guillemetright", "parenleft", "parenright", "slash", "exclam",
+              "question", "ampersand", "ellipsis"]
 KERN_ROWS_STEP = 8
 KERN_WINDOW = 40       # vertical tolerance (font units) so diagonals never collide
 KERN_FACTOR = 0.8
@@ -1573,8 +2059,7 @@ KERN_MAX = 200
 KERN_MIN = 18
 
 
-def _profiles(font, name):
-    import numpy as np
+def _flat_contours(path, dx):
     from fontTools.pens.basePen import BasePen
 
     class FlatPen(BasePen):
@@ -1592,8 +2077,8 @@ def _profiles(font, name):
             p0 = self.cur[-1]
             for i in range(1, 9):
                 t = i / 8
-                a, b, c = (1 - t) ** 2, 2 * (1 - t) * t, t * t
-                self.cur.append((a * p0[0] + b * p1[0] + c * p2[0], a * p0[1] + b * p1[1] + c * p2[1]))
+                a_, b_, c_ = (1 - t) ** 2, 2 * (1 - t) * t, t * t
+                self.cur.append((a_ * p0[0] + b_ * p1[0] + c_ * p2[0], a_ * p0[1] + b_ * p1[1] + c_ * p2[1]))
 
         def _closePath(self):
             self.contours.append(self.cur)
@@ -1601,16 +2086,18 @@ def _profiles(font, name):
 
         _endPath = _closePath
 
-    glyf = font["glyf"]
     pen = FlatPen()
-    glyf[name].draw(pen, glyf)
-    rows = np.arange(-300, 760, KERN_ROWS_STEP, dtype=float)
+    path.draw(TransformPen(pen, (S, 0, 0, S, dx, BASE * S)))
+    return pen.contours
+
+
+def profile(path, dx, rows):
+    import numpy as np
     L = np.full(rows.shape, np.inf)
     Rr = np.full(rows.shape, -np.inf)
-    for c in pen.contours:
+    for c in _flat_contours(path, dx):
         pts = np.array(c + [c[0]], dtype=float)
-        x0, y0, x1, y1 = pts[:-1, 0], pts[:-1, 1], pts[1:, 0], pts[1:, 1]
-        for xa, ya, xb, yb in zip(x0, y0, x1, y1):
+        for xa, ya, xb, yb in zip(pts[:-1, 0], pts[:-1, 1], pts[1:, 0], pts[1:, 1]):
             lo, hi = min(ya, yb), max(ya, yb)
             m = (rows >= lo) & (rows <= hi)
             if not m.any():
@@ -1618,7 +2105,6 @@ def _profiles(font, name):
             xs = xa if ya == yb else xa + (rows[m] - ya) * (xb - xa) / (yb - ya)
             L[m] = np.minimum(L[m], xs)
             Rr[m] = np.maximum(Rr[m], xs)
-    # widen vertically so near-diagonal neighbours keep their distance
     k = KERN_WINDOW // KERN_ROWS_STEP
     Lw, Rw = L.copy(), Rr.copy()
     for s_ in range(1, k + 1):
@@ -1627,47 +2113,340 @@ def _profiles(font, name):
     return Lw, Rw
 
 
-def auto_kern(font, order):
+def kern_groups(names):
+    """Accented letters kern with their base letter: group name -> members."""
+    groups = {}
+    for n in names:
+        base = COMPOSITES[n][1] if n in COMPOSITES else n
+        base = {"dotlessi": "i", "dotlessj": "j", "Dcroat": "Eth"}.get(base, base)
+        groups.setdefault(base, []).append(n)
+    return groups
+
+
+def auto_kern(glyphs, names):
+    """Class kerning from glyph profiles. Each group is measured by the envelope of all
+    its members, so accents never collide. -> (groups.plist dict, kerning dict)."""
     import numpy as np
-    hmtx = font["hmtx"]
-    names = [n for n in KERN_SET if n in order]
-    prof = {n: _profiles(font, n) for n in names}
+    rows = np.arange(-450, 950, KERN_ROWS_STEP, dtype=float)
+    groups = kern_groups(names)
+    prof = {}
+    for gname, members in groups.items():
+        Ls, Rs = [], []
+        for n in members:
+            gl = glyphs[n]
+            Lp, Rp = profile(gl["path"], gl["dx"], rows)
+            Ls.append(Lp)
+            Rs.append(Rp)
+        prof[gname] = (np.min(Ls, axis=0), np.max(Rs, axis=0), glyphs[groups[gname][0]]["adv"])
     target = 2 * SB * S
-    lines = []
-    for a_ in names:
-        adv = hmtx[a_][0]
-        Ra = prof[a_][1]
-        for b_ in names:
-            Lb = prof[b_][0]
+    kerning = {}
+    for ga, (_, Ra, adv) in prof.items():
+        for gb, (Lb, _, _) in prof.items():
             m = np.isfinite(Ra) & np.isfinite(Lb)
             if not m.any():
                 continue
             dmin = float(np.min(adv - Ra[m] + Lb[m]))
-            excess = dmin - target
-            kv = -int(round(min(KERN_MAX, KERN_FACTOR * excess) / 2.0) * 2)
+            kv = -int(round(min(KERN_MAX, KERN_FACTOR * (dmin - target)) / 2.0) * 2)
             if abs(kv) >= KERN_MIN:
-                lines.append(f"  pos {a_} {b_} {kv};")
-    return "feature kern {\n" + "\n".join(lines) + "\n} kern;\n"
+                left = f"public.kern1.{ga}" if len(groups[ga]) > 1 else ga
+                right = f"public.kern2.{gb}" if len(groups[gb]) > 1 else gb
+                kerning[(left, right)] = kv
+    plist = {}
+    for gname, members in groups.items():
+        if len(members) > 1:
+            plist[f"public.kern1.{gname}"] = list(members)
+            plist[f"public.kern2.{gname}"] = list(members)
+    return plist, kerning
 
 
-def adv_of(name, glyf_t, mode, cell):
-    if mode != "open":
-        return round(cell)
-    if name == "space":
-        return round(0.62 * S)
-    g_ = glyf_t[name]
-    return round(g_.xMax - g_.xMin + 2 * SB * S)
+# --------------------------------------------------------------------------------------
+# UFO writer
+# --------------------------------------------------------------------------------------
+def glyph_order():
+    names = [n for n in GLYPHS if n not in (".notdef", "space")]
+    return [".notdef", "space"] + names
+
+
+def build_glyphs(style):
+    """-> dict name -> {path (design units), dx (font units), adv, unicodes}."""
+    cfg = STYLES[style]
+    k, mode = cfg["k"], cfg["mode"]
+    cell = round((2 * D + 2 * CELL_SB) * S)
+    out = {}
+    for name in glyph_order():
+        uni, _ = GLYPHS[name]
+        if mode != "open" and name == "caroncomb.alt":
+            continue                              # only used as a component in Regular
+        path = Path() if name == "space" else glyph_outline(name, k, mode)
+        b = path_bounds(path)
+        if is_mark(name):
+            dx = -MARK_CENTER * S if mode == "open" else -cell / 2
+            adv = 0
+        elif mode == "open":
+            if b is None:
+                dx, adv = 0, round(0.62 * S)
+            else:
+                dx = (SB - b[0]) * S
+                adv = round((b[2] - b[0] + 2 * SB) * S)
+        else:
+            dx, adv = (D + CELL_SB) * S, cell
+        out[name] = dict(path=path, dx=dx, adv=adv, unicodes=[uni] if uni is not None else [])
+    out["space"]["unicodes"] = [0x20, 0xA0]
+    if mode == "open":
+        for name, c in COMPOSITES.items():          # accented letters keep the base advance
+            base = out[c[1]]
+            g = out[name]
+            g["dx"] = base["dx"]
+            right = path_bounds(g["path"])[2] * S + g["dx"]
+            g["adv"] = max(base["adv"], round(right + SB * S))
+        signs = [n for n in MATH_SIGNS if n in out]
+        adv = max(out[n]["adv"] for n in signs)
+        for n in signs:
+            b = path_bounds(out[n]["path"])
+            out[n]["dx"] = (adv / S - (b[2] - b[0])) / 2 * S - b[0] * S
+            out[n]["adv"] = adv
+    if mode in MONO_MODES:
+        for name, path, dx, adv in mono_glyphs(mode):
+            out[name] = dict(path=path, dx=dx, adv=adv, unicodes=[])
+    return out
+
+
+TINY = 2.5          # font units: segments shorter than this are boolean-op crumbs
+COLINEAR = 4.0      # degrees: consecutive lines closer than this to straight are merged
+SNAP = 1            # font units: near-vertical/horizontal lines this far off are straightened
+
+
+def _clean_contours(path, dx):
+    """Font-unit contours with crumbs from the boolean operations removed: tiny
+    segments dropped and nearly colinear line pairs merged."""
+    from fontTools.pens.recordingPen import RecordingPen
+    rp = RecordingPen()
+    path.draw(TransformPen(rp, (S, 0, 0, S, dx, BASE * S)))
+
+    def rnd(pt):
+        return None if pt is None else (round(pt[0]), round(pt[1]))
+
+    def dist(p0, p1):
+        return math.hypot(p0[0] - p1[0], p0[1] - p1[1])
+
+    contours, cur = [], None
+    for op, pts in rp.value:
+        if op == "moveTo":
+            cur = [rnd(pts[0]), []]
+        elif op in ("lineTo", "qCurveTo"):
+            if cur is None:                      # all-off-curve quadratic contour (no moveTo)
+                cur = [None, []]
+            cur[1].append((op, [rnd(q) for q in pts]))
+        elif op in ("closePath", "endPath"):
+            contours.append(cur)
+            cur = None
+    out = []
+    for start, segs in contours:
+        if start is None:
+            out.append((None, segs))
+            continue
+        cleaned, here = [], start
+        for op, pts in segs:
+            end = pts[-1]
+            if end is not None and all(q is None or dist(q, here) < TINY for q in pts):
+                continue
+            if op == "lineTo":
+                ex, ey = end
+                if 0 < abs(ex - here[0]) <= SNAP and abs(ey - here[1]) > 10:
+                    pts = [(here[0], ey)]
+                elif 0 < abs(ey - here[1]) <= SNAP and abs(ex - here[0]) > 10:
+                    pts = [(ex, here[1])]
+                end = pts[-1]
+            cleaned.append([op, pts, here])
+            here = end if end is not None else here
+        while cleaned and cleaned[-1][0] == "lineTo" and dist(cleaned[-1][1][-1], start) < TINY:
+            cleaned.pop()
+        if cleaned and cleaned[-1][0] == "qCurveTo" and cleaned[-1][1][-1] is not None \
+                and dist(cleaned[-1][1][-1], start) < TINY:
+            cleaned[-1][1][-1] = start
+        merged = []
+        for seg in cleaned:
+            if merged and seg[0] == "lineTo" and merged[-1][0] == "lineTo":
+                a_, b_, c_ = merged[-1][2], merged[-1][1][-1], seg[1][-1]
+                t1 = math.atan2(b_[1] - a_[1], b_[0] - a_[0])
+                t2 = math.atan2(c_[1] - b_[1], c_[0] - b_[0])
+                turn = abs((math.degrees(t2 - t1) + 180) % 360 - 180)
+                if turn < COLINEAR:
+                    merged[-1][1] = [c_]
+                    continue
+            merged.append(seg)
+        if len(merged) >= 2 or any(m[0] == "qCurveTo" for m in merged):
+            out.append((start, [(op, pts) for op, pts, _ in merged]))
+    return out
+
+
+def _draw_ufo_outline(glyph, path, dx):
+    from fontTools.pens.reverseContourPen import ReverseContourPen
+    if path_bounds(path) is None:
+        return
+    pen = glyph.getPen()
+    if signed_area(path) < 0:                    # UFO wants counter-clockwise outer contours
+        pen = ReverseContourPen(pen)
+    for start, segs in _clean_contours(path, dx):
+        if start is not None:
+            pen.moveTo(start)
+        for op, pts in segs:
+            getattr(pen, op)(*pts)
+        pen.closePath()
+
+
+def vertical_metrics(glyphs):
+    ys = [path_bounds(g["path"]) for g in glyphs.values() if path_bounds(g["path"]) is not None]
+    ymax = max(b[3] for b in ys)
+    ymin = min(b[1] for b in ys)
+    asc = int(math.ceil((ymax + BASE) * S / 10.0) * 10)
+    desc = int(math.floor((ymin + BASE) * S / 10.0) * 10)
+    return asc, desc
+
+
+def write_ufo(style, path_out):
+    import ufoLib2
+    from ufoLib2.objects import Anchor
+    cfg = STYLES[style]
+    mode = cfg["mode"]
+    glyphs = build_glyphs(style)
+    ufo = ufoLib2.Font()
+    info = ufo.info
+    info.familyName = cfg["family"]
+    info.styleName = "Regular"
+    info.styleMapFamilyName = cfg["family"]
+    info.styleMapStyleName = "regular"
+    major, minor = VERSION.split(".")
+    info.versionMajor, info.versionMinor = int(major), int(minor)
+    info.copyright = COPYRIGHT
+    info.openTypeNameDesigner = "RV"
+    info.openTypeNameManufacturer = "The Rondel Project Authors"
+    info.openTypeNameManufacturerURL = REPO_URL
+    info.openTypeNameLicense = ("This Font Software is licensed under the SIL Open Font License, "
+                                "Version 1.1. This license is available with a FAQ at: "
+                                "https://openfontlicense.org")
+    info.openTypeNameLicenseURL = "https://openfontlicense.org"
+    info.openTypeNameDescription = ("Every glyph inscribed in one circle; built only from circle "
+                                    "arcs and straight lines.")
+    info.unitsPerEm = UPM
+    asc, desc = vertical_metrics(glyphs)
+    info.ascender, info.descender = asc, desc
+    info.xHeight = round(2 * XB * S)
+    info.capHeight = round((D + BASE) * S)
+    info.openTypeHheaAscender, info.openTypeHheaDescender, info.openTypeHheaLineGap = asc, desc, 0
+    info.openTypeOS2TypoAscender, info.openTypeOS2TypoDescender, info.openTypeOS2TypoLineGap = asc, desc, 0
+    info.openTypeOS2WinAscent, info.openTypeOS2WinDescent = asc, -desc
+    info.openTypeOS2Selection = [7]               # USE_TYPO_METRICS
+    info.openTypeOS2Type = []                     # installable
+    info.openTypeOS2VendorID = "RNDL"
+    info.openTypeOS2WeightClass = 400
+    info.openTypeOS2WidthClass = 5
+    info.openTypeOS2Panose = PANOSE_PROP if mode == "open" else PANOSE_MONO
+    info.openTypeOS2StrikeoutSize = round(W * S)
+    info.openTypeOS2StrikeoutPosition = round(XB * S)
+    info.postscriptUnderlinePosition = -120
+    info.postscriptUnderlineThickness = round(W * S * 0.6)
+    info.postscriptIsFixedPitch = mode != "open"
+    info.postscriptFontName = f"{cfg['family'].replace(' ', '')}-Regular"
+
+    order = list(glyphs)
+    categories = {}
+    for name in order:
+        g = glyphs[name]
+        gl = ufo.newGlyph(name)
+        gl.width = g["adv"]
+        gl.unicodes = g["unicodes"]
+        comp = COMPOSITES.get(name) if mode == "open" else None
+        if comp:
+            _, base, marks = comp
+            pen = gl.getPen()
+            pen.addComponent(base, (1, 0, 0, 1, 0, 0))
+            for mname, kind in marks:
+                ax, ay = anchor(base, kind)
+                mx = ax * S + glyphs[base]["dx"] - glyphs[mname]["dx"]
+                my = (ay - mark_attach_y(kind)) * S
+                pen.addComponent(mname, (1, 0, 0, 1, round(mx), round(my)))
+        elif mode == "open" and name == "Dcroat":
+            gl.getPen().addComponent("Eth", (1, 0, 0, 1, 0, 0))
+        else:
+            _draw_ufo_outline(gl, g["path"], g["dx"])
+        if is_mark(name):
+            categories[name] = "mark"
+            kind = MARKS[name]["kind"]
+            aname = {"top": "_top", "bottom": "_bottom", "ogonek": "_ogonek"}.get(kind)
+            if aname and mode == "open":
+                ay = mark_attach_y(kind)
+                gl.anchors.append(Anchor(round(g["dx"]), round((ay + BASE) * S), aname))
+                b = path_bounds(g["path"])
+                if kind == "top":                 # lets a second accent stack on top
+                    gl.anchors.append(Anchor(round(g["dx"]), round((b[3] + 0.08 + BASE) * S), "top"))
+                elif kind == "bottom":
+                    gl.anchors.append(Anchor(round(g["dx"]), round((b[1] - 0.06 + BASE) * S), "bottom"))
+        elif g["unicodes"] or name in COMPOSITES:
+            categories[name] = "base"
+    if mode == "open":                            # anchors for combining marks on base letters
+        bases = set(c[1] for c in COMPOSITES.values()) | set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghklmnopqrstuvwxyz")
+        bases |= {"dotlessi", "dotlessj", "dottedCircle"}
+        bases -= set(COMPOSITES)                  # composites inherit anchors (propagateAnchors)
+        for base in sorted(bases):
+            if base not in ufo:
+                continue
+            gl = ufo[base]
+            dx = glyphs[base]["dx"]
+            for kind, aname in (("top", "top"), ("bottom", "bottom")):
+                ax, ay = anchor(base, kind)
+                gl.anchors.append(Anchor(round(ax * S + dx), round((ay + BASE) * S), aname))
+            if base in OGONEK_AT:
+                ax, ay = OGONEK_AT[base]
+                gl.anchors.append(Anchor(round(ax * S + dx), round((ay + BASE) * S), "ogonek"))
+    ufo.lib["public.glyphOrder"] = order
+    ufo.lib["public.openTypeMeta"] = {"dlng": ["Latn"], "slng": ["Latn"]}
+    if mode == "open":
+        ufo.lib["com.github.googlei18n.ufo2ft.filters"] = [{"name": "propagateAnchors", "pre": True}]
+    ufo.lib["public.openTypeCategories"] = categories
+    ufo.lib["public.postscriptNames"] = {n: production_name(n, glyphs[n]["unicodes"]) for n in order}
+
+    fea = "languagesystem DFLT dflt;\nlanguagesystem latn dflt;\n\n" + ccmp_fea()
+    if mode in MONO_MODES:
+        fea += "\n" + mono_fea()
+    ufo.features.text = fea
+    if mode == "open":
+        names = [n for n in order if n in glyphs and (
+            (glyphs[n]["unicodes"] and unicodedata_category(glyphs[n]["unicodes"][0]).startswith("L"))
+            or n in KERN_EXTRA)]
+        groups, kerning = auto_kern(glyphs, names)
+        ufo.groups.update(groups)
+        ufo.kerning.update(kerning)
+    import shutil
+    if os.path.exists(path_out):
+        shutil.rmtree(path_out)
+    ufo.save(path_out)
+    return path_out, len(order), len(ufo.kerning)
+
+
+def unicodedata_category(cp):
+    import unicodedata
+    return unicodedata.category(chr(cp))
+
+
+def production_name(name, unicodes):
+    from fontTools.agl import UV2AGL
+    if not unicodes:
+        return name
+    cp = unicodes[0]
+    if cp in UV2AGL:
+        return UV2AGL[cp]
+    return f"uni{cp:04X}" if cp <= 0xFFFF else f"u{cp:05X}"
 
 
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(description="Build the Rondel fonts.")
-    ap.add_argument("outdir", nargs="?", default="fonts", help="output folder for both formats")
-    ap.add_argument("--ttf", help="folder for .ttf files (default: outdir)")
-    ap.add_argument("--woff2", help="folder for .woff2 files (default: outdir)")
+    ap = argparse.ArgumentParser(description="Write the Rondel UFO sources.")
+    ap.add_argument("--ufo", default="sources/ufo", help="folder for the .ufo sources")
+    ap.add_argument("--styles", nargs="*", default=list(STYLES))
     args = ap.parse_args()
-    if os.environ.get("RONDEL_PROOF"):
-        STYLES["Cell"] = dict(k=1.0, mode="cell")
-    for st in STYLES:
-        p = build_style(st, args.ttf or args.outdir, args.woff2 or args.outdir)
-        print("built", p, len(TTFont(p).getGlyphOrder()), "glyphs")
+    os.makedirs(args.ufo, exist_ok=True)
+    for st in args.styles:
+        fam = STYLES[st]["family"].replace(" ", "")
+        p, n, nk = write_ufo(st, os.path.join(args.ufo, f"{fam}-Regular.ufo"))
+        print(f"wrote {p}: {n} glyphs, {nk} kerning pairs")

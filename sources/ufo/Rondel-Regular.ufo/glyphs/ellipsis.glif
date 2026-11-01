@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="ellipsis" format="2">
+  <advance width="559"/>
+  <unicode hex="2026"/>
+  <outline>
+    <contour>
+      <point x="327" y="57"/>
+      <point x="320" y="75"/>
+      <point x="307" y="88"/>
+      <point x="289" y="95"/>
+      <point x="270" y="95"/>
+      <point x="253" y="88"/>
+      <point x="239" y="75"/>
+      <point x="232" y="57"/>
+      <point x="232" y="38"/>
+      <point x="239" y="21"/>
+      <point x="253" y="7"/>
+      <point x="270" y="0"/>
+      <point x="289" y="0"/>
+      <point x="307" y="7"/>
+      <point x="320" y="21"/>
+      <point x="327" y="38"/>
+    </contour>
+    <contour>
+      <point x="143" y="57"/>
+      <point x="136" y="75"/>
+      <point x="123" y="88"/>
+      <point x="105" y="95"/>
+      <point x="86" y="95"/>
+      <point x="69" y="88"/>
+      <point x="55" y="75"/>
+      <point x="48" y="57"/>
+      <point x="48" y="38"/>
+      <point x="55" y="21"/>
+      <point x="69" y="7"/>
+      <point x="86" y="0"/>
+      <point x="105" y="0"/>
+      <point x="123" y="7"/>
+      <point x="136" y="21"/>
+      <point x="143" y="38"/>
+    </contour>
+    <contour>
+      <point x="511" y="57"/>
+      <point x="504" y="75"/>
+      <point x="491" y="88"/>
+      <point x="473" y="95"/>
+      <point x="454" y="95"/>
+      <point x="437" y="88"/>
+      <point x="423" y="75"/>
+      <point x="416" y="57"/>
+      <point x="416" y="38"/>
+      <point x="423" y="21"/>
+      <point x="437" y="7"/>
+      <point x="454" y="0"/>
+      <point x="473" y="0"/>
+      <point x="491" y="7"/>
+      <point x="504" y="21"/>
+      <point x="511" y="38"/>
+    </contour>
+  </outline>
+</glyph>

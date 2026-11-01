@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="commaturnedabovecomb" format="2">
+  <unicode hex="0312"/>
+  <anchor x="-280" y="494" name="_top"/>
+  <anchor x="-280" y="647" name="top"/>
+  <outline>
+    <contour>
+      <point x="-304" y="558" type="qcurve"/>
+      <point x="-309" y="553"/>
+      <point x="-314" y="541"/>
+      <point x="-314" y="527"/>
+      <point x="-309" y="515"/>
+      <point x="-299" y="505"/>
+      <point x="-287" y="500"/>
+      <point x="-273" y="500"/>
+      <point x="-261" y="505"/>
+      <point x="-251" y="515"/>
+      <point x="-249" y="521" type="qcurve"/>
+      <point x="-246" y="526"/>
+      <point x="-246" y="532" type="qcurve"/>
+      <point x="-245" y="533"/>
+      <point x="-244" y="534" type="qcurve"/>
+      <point x="-229" y="551"/>
+      <point x="-214" y="593"/>
+      <point x="-215" y="615" type="qcurve"/>
+      <point x="-273" y="613" type="line"/>
+      <point x="-272" y="602"/>
+      <point x="-280" y="581"/>
+      <point x="-295" y="565"/>
+    </contour>
+  </outline>
+</glyph>

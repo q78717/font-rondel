@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="divide" format="2">
+  <advance width="596"/>
+  <unicode hex="00F7"/>
+  <outline>
+    <contour>
+      <point x="118" y="268" type="line"/>
+      <point x="118" y="200" type="line"/>
+      <point x="478" y="200" type="line"/>
+      <point x="478" y="268" type="line"/>
+    </contour>
+    <contour>
+      <point x="346" y="123"/>
+      <point x="338" y="141"/>
+      <point x="325" y="154"/>
+      <point x="307" y="162"/>
+      <point x="289" y="162"/>
+      <point x="271" y="154"/>
+      <point x="258" y="141"/>
+      <point x="250" y="123"/>
+      <point x="250" y="105"/>
+      <point x="258" y="87"/>
+      <point x="271" y="74"/>
+      <point x="289" y="66"/>
+      <point x="307" y="66"/>
+      <point x="325" y="74"/>
+      <point x="338" y="87"/>
+      <point x="346" y="105"/>
+    </contour>
+    <contour>
+      <point x="346" y="363"/>
+      <point x="338" y="381"/>
+      <point x="325" y="394"/>
+      <point x="307" y="402"/>
+      <point x="289" y="402"/>
+      <point x="271" y="394"/>
+      <point x="258" y="381"/>
+      <point x="250" y="363"/>
+      <point x="250" y="345"/>
+      <point x="258" y="327"/>
+      <point x="271" y="314"/>
+      <point x="289" y="306"/>
+      <point x="307" y="306"/>
+      <point x="325" y="314"/>
+      <point x="338" y="327"/>
+      <point x="346" y="345"/>
+    </contour>
+  </outline>
+</glyph>

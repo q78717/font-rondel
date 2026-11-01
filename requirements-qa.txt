@@ -1,4 +1,7 @@
-# Quality checks and proofing tools (sources/tools)
-fontbakery==1.1.0
+# Quality checks and proofing tools (sources/tools). Install in a separate
+# environment from requirements.txt: fontbakery and gftools pin different versions
+# of some shared libraries.
+fontbakery[googlefonts]==1.1.0
 freetype-py==2.3.0
 Pillow==12.3.0
+uharfbuzz==0.57.0

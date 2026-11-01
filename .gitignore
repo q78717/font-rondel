@@ -4,5 +4,7 @@ env/
 __pycache__/
 *.pyc
 .DS_Store
-fontbakery-report.*
+fb-*.html
+fb-*.md
+qa/
 *.hinted

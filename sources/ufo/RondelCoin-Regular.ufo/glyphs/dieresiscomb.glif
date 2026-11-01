@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="dieresiscomb" format="2">
+  <unicode hex="0308"/>
+  <outline>
+    <contour>
+      <point x="-473" y="467"/>
+      <point x="-480" y="482"/>
+      <point x="-492" y="494"/>
+      <point x="-508" y="501"/>
+      <point x="-525" y="501"/>
+      <point x="-541" y="494"/>
+      <point x="-553" y="482"/>
+      <point x="-559" y="467"/>
+      <point x="-559" y="450"/>
+      <point x="-553" y="434"/>
+      <point x="-541" y="422"/>
+      <point x="-525" y="415"/>
+      <point x="-508" y="415"/>
+      <point x="-492" y="422"/>
+      <point x="-480" y="434"/>
+      <point x="-473" y="450"/>
+    </contour>
+    <contour>
+      <point x="-373" y="467"/>
+      <point x="-379" y="482"/>
+      <point x="-391" y="494"/>
+      <point x="-407" y="501"/>
+      <point x="-424" y="501"/>
+      <point x="-440" y="494"/>
+      <point x="-452" y="482"/>
+      <point x="-459" y="467"/>
+      <point x="-459" y="450"/>
+      <point x="-452" y="434"/>
+      <point x="-440" y="422"/>
+      <point x="-424" y="415"/>
+      <point x="-407" y="415"/>
+      <point x="-391" y="422"/>
+      <point x="-379" y="434"/>
+      <point x="-373" y="450"/>
+    </contour>
+  </outline>
+</glyph>

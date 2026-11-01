@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="ringcomb" format="2">
+  <unicode hex="030A"/>
+  <outline>
+    <contour>
+      <point x="-401" y="486"/>
+      <point x="-411" y="510"/>
+      <point x="-429" y="528"/>
+      <point x="-453" y="538"/>
+      <point x="-479" y="538"/>
+      <point x="-503" y="528"/>
+      <point x="-521" y="510"/>
+      <point x="-531" y="486"/>
+      <point x="-531" y="460"/>
+      <point x="-521" y="436"/>
+      <point x="-503" y="417"/>
+      <point x="-479" y="407"/>
+      <point x="-453" y="407"/>
+      <point x="-429" y="417"/>
+      <point x="-411" y="436"/>
+      <point x="-401" y="460"/>
+    </contour>
+    <contour>
+      <point x="-458" y="471"/>
+      <point x="-460" y="468"/>
+      <point x="-462" y="466"/>
+      <point x="-465" y="465"/>
+      <point x="-467" y="465"/>
+      <point x="-470" y="466"/>
+      <point x="-472" y="468"/>
+      <point x="-474" y="471"/>
+      <point x="-474" y="474"/>
+      <point x="-472" y="477"/>
+      <point x="-470" y="479"/>
+      <point x="-467" y="480"/>
+      <point x="-465" y="480"/>
+      <point x="-462" y="479"/>
+      <point x="-460" y="477"/>
+      <point x="-458" y="474"/>
+    </contour>
+  </outline>
+</glyph>

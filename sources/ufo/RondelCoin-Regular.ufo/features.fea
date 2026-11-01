@@ -1,0 +1,11 @@
+languagesystem DFLT dflt;
+languagesystem latn dflt;
+
+@TOP_MARKS = [acutecomb gravecomb circumflexcomb caroncomb tildecomb macroncomb brevecomb dotaccentcomb dieresiscomb ringcomb hungarumlautcomb commaturnedabovecomb];
+@BOTTOM_MARKS = [cedillacomb commaaccentcomb ogonekcomb];
+lookup DOTLESS { sub i by dotlessi; sub j by dotlessj; sub iogonek by iogonek.dotless; } DOTLESS;
+feature ccmp {
+  sub [i j iogonek]' lookup DOTLESS @TOP_MARKS;
+  sub [i j iogonek]' lookup DOTLESS @BOTTOM_MARKS @TOP_MARKS;
+  sub [i j iogonek]' lookup DOTLESS @BOTTOM_MARKS @BOTTOM_MARKS @TOP_MARKS;
+} ccmp;

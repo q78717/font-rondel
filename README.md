@@ -30,7 +30,11 @@ Each initial gets its own circle. All the circles in a monogram have the same ra
 
 ## Character set
 
-Printable ASCII (95 characters). Rondel is a display face: it reads best at 32 px and up, and monograms at 48 px and up. It isn't intended for body text or interface labels.
+Google Fonts' Latin Core set: the Latin languages of Western, Central and Eastern Europe, with curly quotes, dashes, currency signs and combining accents. Accents are drawn from arcs and lines too. On lowercase they sit inside the circle; capitals already fill their circle, so their accents sit just outside it.
+
+![Accented text](documentation/images/languages.png)
+
+Rondel is a display face: it reads best at 32 px and up, and monograms at 48 px and up. It isn't intended for body text or interface labels.
 
 ![Glyph set](documentation/images/glyphs.png)
 
@@ -50,7 +54,7 @@ Printable ASCII (95 characters). Rondel is a display face: it reads best at 32 p
 
 ## Building from source
 
-Every glyph is a short Python function in `sources/build_rondel.py` that draws arcs and lines; the script strokes them, combines them, and writes the fonts. Requires Python 3.13.
+Every glyph is a short Python function in `sources/build_rondel.py` that draws arcs and lines. The script strokes and merges them and writes the UFO sources in `sources/ufo/`; [gftools builder](https://github.com/googlefonts/gftools) then compiles and hints the fonts. Requires Python 3.13.
 
 ```sh
 python3 -m venv venv
@@ -59,13 +63,15 @@ pip install -r requirements.txt
 sources/build.sh
 ```
 
-This writes `fonts/ttf/`, `fonts/webfonts/` and `documentation/specimen/index.html`, then checks that monograms still work.
+This writes `sources/ufo/`, `fonts/ttf/`, `fonts/webfonts/` and `documentation/specimen/index.html`, then checks that monograms still work.
 
-To run the quality checks:
+The quality checks need their own environment, because FontBakery and gftools pin different versions of some shared libraries:
 
 ```sh
-pip install -r requirements-qa.txt
-fontbakery check-universal fonts/ttf/*.ttf
+python3 -m venv qa
+qa/bin/pip install -r requirements-qa.txt
+qa/bin/fontbakery check-googlefonts fonts/ttf/Rondel-Regular.ttf
+qa/bin/fontbakery check-universal fonts/ttf/RondelRing-Regular.ttf fonts/ttf/RondelCoin-Regular.ttf
 ```
 
 ## Licence

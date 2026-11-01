@@ -78,9 +78,10 @@ def main():
     ap.add_argument("--out", default="documentation/specimen/index.html")
     a = ap.parse_args()
 
-    font = TTFont(os.path.join(a.ttf, "Rondel-Regular.ttf"))
-    pairs = sum(len(ps.PairValueRecord) for st in font["GPOS"].table.LookupList.Lookup[0].SubTable
-                for ps in getattr(st, "PairSet", []))
+    import plistlib
+    kplist = os.path.join(HERE, "ufo", "Rondel-Regular.ufo", "kerning.plist")
+    with open(kplist, "rb") as fh:
+        pairs = sum(len(v) for v in plistlib.load(fh).values())
     meta = {"S": B.S, "W": round(B.W * B.S), "R": round(B.R * B.S), "D": round(B.D * B.S),
             "XR": round(B.XR * B.S), "XB": round(B.XB * B.S),
             "glyphs": sum(1 for _, (u, _f) in B.GLYPHS.items() if u is not None),
@@ -96,7 +97,8 @@ def main():
     t = (t.replace("__GLYPH_DATA__", json.dumps(data, separators=(",", ":")))
           .replace("__VERSION__", B.VERSION)
           .replace("__REPO__", B.REPO_URL)
-          .replace("__KERN__", f"{pairs:,}"))
+          .replace("__KERN__", f"{pairs:,}")
+          .replace("__CHARS__", str(meta["glyphs"])))
     os.makedirs(os.path.dirname(a.out), exist_ok=True)
     open(a.out, "w", encoding="utf-8").write(t)
     print(f"specimen -> {a.out} ({len(t):,} bytes, {len(data['glyphs'])} glyphs, {pairs:,} kern pairs)")

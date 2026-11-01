@@ -236,7 +236,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
     <p class="lede">Every letter, figure and symbol is drawn inside the same circle, using only arcs of circles and straight lines.</p>
     <p class="get"><a class="get-btn" href="__REPO__/releases/latest">Download the fonts</a> <a class="get-src" href="__REPO__">Source on GitHub</a> <span class="get-lic">Free under the SIL Open Font License</span></p>
     <dl class="specs" aria-label="Font specifications">
-      <div><dt>Characters</dt><dd id="sp-glyphs">95</dd></div>
+      <div><dt>Characters</dt><dd id="sp-glyphs">__CHARS__</dd></div>
       <div><dt>Monograms</dt><dd id="sp-combos">18,278</dd></div>
       <div><dt>Styles</dt><dd>3</dd></div>
       <div><dt>Units / em</dt><dd>1000</dd></div>
@@ -294,7 +294,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
 <section id="tester">
   <div class="wrap">
     <h2>Type tester</h2>
-    <p class="sub">Type to try it. Rondel covers printable ASCII. Initials between &lt; and &gt; turn into a monogram.</p>
+    <p class="sub">Type to try it. Rondel covers Google Fonts&rsquo; Latin Core: the languages of Western, Central and Eastern Europe. Initials between &lt; and &gt; turn into a monogram.</p>
     <div class="controls">
       <div class="seg" role="radiogroup" aria-label="Style">
         <input type="radio" name="st" id="st-reg" value="Rondel" checked><label for="st-reg">Regular</label>
@@ -313,7 +313,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
       <button type="button" class="textbtn" id="reset">Reset text</button>
     </div>
     <div class="tester-text" id="tt" contenteditable="plaintext-only" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Type tester">Arcs &amp; lines inside one circle.
-The quick brown fox jumps over the lazy dog, 2026!</div>
+Žluťoučký kůň · Zażółć gęślą jaźń · Ærø, 2026!</div>
   </div>
 </section>
 
@@ -394,6 +394,10 @@ The quick brown fox jumps over the lazy dog, 2026!</div>
       <article>
         <h3>Arcs first</h3>
         <p>A stroke is an arc wherever the letter survives it. The sides of H, M, N, U and W and the bars of E, F, L, T and Z run along the circle itself. Stems of B, D, E, F, K, L, P and R are cut from a circle of radius <span class="num">1,200</span>. Diagonals are bowed, and A's crossbar is swung from its apex. Straight lines remain for vertical axes, crossbars and the math signs. Every stroke is <span class="num">68</span> units wide.</p>
+      </article>
+      <article>
+        <h3>Accents</h3>
+        <p>Accents are built from arcs and lines too, drawn slightly lighter than the letters. On lowercase they sit inside the circle. A capital already fills its circle, so its accents sit just outside it, as do accents on ascenders such as &#314;. In Ring and Coin, an accented capital is scaled down until the whole glyph fits inside the ring.</p>
       </article>
       <article>
         <h3>Monograms</h3>

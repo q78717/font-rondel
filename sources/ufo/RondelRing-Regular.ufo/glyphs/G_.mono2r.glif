@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<glyph name="G.mono2r" format="2">
+  <outline>
+    <contour>
+      <point x="-96" y="419" type="line"/>
+      <point x="-131" y="464"/>
+      <point x="-229" y="522"/>
+      <point x="-342" y="540"/>
+      <point x="-453" y="515"/>
+      <point x="-548" y="452"/>
+      <point x="-612" y="358"/>
+      <point x="-638" y="247"/>
+      <point x="-622" y="134"/>
+      <point x="-565" y="35"/>
+      <point x="-477" y="-36"/>
+      <point x="-368" y="-70"/>
+      <point x="-254" y="-62"/>
+      <point x="-151" y="-13"/>
+      <point x="-74" y="71"/>
+      <point x="-53" y="124" type="qcurve" smooth="yes"/>
+      <point x="-38" y="161"/>
+      <point x="-34" y="200" type="qcurve"/>
+      <point x="-30" y="217"/>
+      <point x="-30" y="251"/>
+      <point x="-32" y="268" type="qcurve"/>
+      <point x="-306" y="268" type="line"/>
+      <point x="-306" y="200" type="line"/>
+      <point x="-102" y="200" type="line"/>
+      <point x="-106" y="174"/>
+      <point x="-116" y="149" type="qcurve" smooth="yes"/>
+      <point x="-132" y="108"/>
+      <point x="-192" y="43"/>
+      <point x="-272" y="5"/>
+      <point x="-360" y="-1"/>
+      <point x="-444" y="25"/>
+      <point x="-513" y="80"/>
+      <point x="-557" y="157"/>
+      <point x="-569" y="244"/>
+      <point x="-549" y="330"/>
+      <point x="-499" y="403"/>
+      <point x="-426" y="452"/>
+      <point x="-340" y="471"/>
+      <point x="-252" y="457"/>
+      <point x="-176" y="412"/>
+      <point x="-149" y="377" type="qcurve"/>
+    </contour>
+  </outline>
+</glyph>
