@@ -54,25 +54,18 @@ Rondel is a display face: it reads best at 32 px and up, and monograms at 48 px 
 
 ## Building from source
 
-Every glyph is a short Python function in `sources/build_rondel.py` that draws arcs and lines. The script strokes and merges them and writes the UFO sources in `sources/ufo/`; [gftools builder](https://github.com/googlefonts/gftools) then compiles and hints the fonts. Requires Python 3.13.
+Every glyph is a short Python function in `sources/build_rondel.py` that draws arcs and lines. The script strokes and merges them and writes the UFO sources in `sources/ufo/`; [gftools builder](https://github.com/googlefonts/gftools) then compiles and hints the fonts. The repository follows the [Google Fonts project template](https://github.com/googlefonts/googlefonts-project-template). Requires Python 3.13.
 
 ```sh
-python3 -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
-sources/build.sh
+make build    # sets up venv/ from requirements.txt, then runs sources/build.sh
+make test     # checks the fonts with fontspector (cargo binstall fontspector)
+make proof    # HTML proofs in out/proof (cargo binstall diffenator3)
+make images   # redraws the PNG images in documentation/images
 ```
 
-This writes `sources/ufo/`, `fonts/ttf/`, `fonts/webfonts/` and `documentation/specimen/index.html`, then checks that monograms still work.
+`sources/build.sh` is the single build command: it writes `sources/ufo/`, compiles every `sources/config*.yaml` into `fonts/ttf/` and `fonts/webfonts/`, rebuilds `documentation/specimen/index.html`, and checks that monograms still work.
 
-The quality checks need their own environment, because FontBakery and gftools pin different versions of some shared libraries:
-
-```sh
-python3 -m venv qa
-qa/bin/pip install -r requirements-qa.txt
-qa/bin/fontbakery check-googlefonts fonts/ttf/Rondel-Regular.ttf
-qa/bin/fontbakery check-universal fonts/ttf/RondelRing-Regular.ttf fonts/ttf/RondelCoin-Regular.ttf
-```
+Dependencies are listed in `requirements.in`; `make update` regenerates the pinned `requirements.txt`. To check with FontBakery instead of fontspector, use a separate environment: `pip install -r requirements-qa.txt`.
 
 ## Licence
 

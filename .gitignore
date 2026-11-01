@@ -8,3 +8,6 @@ fb-*.html
 fb-*.md
 qa/
 *.hinted
+build.stamp
+out/
+venv-test/
