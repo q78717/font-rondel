@@ -1,0 +1,8 @@
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+fontbakery-report.*
+*.hinted

@@ -1,0 +1,44 @@
+name: Build and check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: pip install -r requirements.txt -r requirements-qa.txt
+
+      - name: Build fonts and specimen
+        run: sources/build.sh
+
+      - name: FontBakery
+        run: >
+          fontbakery check-universal
+          --html fontbakery-report.html
+          --ghmarkdown fontbakery-report.md
+          fonts/ttf/*.ttf
+
+      - name: Add report to the run summary
+        if: always()
+        run: test -f fontbakery-report.md && cat fontbakery-report.md >> "$GITHUB_STEP_SUMMARY" || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rondel-build
+          path: |
+            fonts/
+            documentation/specimen/
+            fontbakery-report.*

@@ -1,0 +1,7 @@
+# Build requirements (pinned for reproducible builds)
+fonttools==4.66.1
+skia-pathops==0.9.2
+numpy==2.5.3
+brotli==1.2.1
+ttfautohint-py==0.6.1
+uharfbuzz==0.57.0

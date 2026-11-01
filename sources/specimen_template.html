@@ -1,0 +1,622 @@
+<title>Rondel Specimen</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+@font-face { font-family: "Rondel"; src: url(data:font/woff2;base64,__FONT_REGULAR__) format("woff2"); font-display: block; }
+@font-face { font-family: "Rondel Ring"; src: url(data:font/woff2;base64,__FONT_RING__) format("woff2"); font-display: block; }
+@font-face { font-family: "Rondel Coin"; src: url(data:font/woff2;base64,__FONT_COIN__) format("woff2"); font-display: block; }
+
+/* Layout: a drafting sheet. Quiet header, then the compass drawing (inspector + glyph set) as the one bold block, then tester, styles, system notes. */
+:root {
+  --paper: #F2F1EC;
+  --panel: #E6E8EC;
+  --ink: #14213D;
+  --muted: #56607A;
+  --rule: #CDD2DC;
+  --denim: #3E6194;
+  --red: #C3322B;
+  --f-display: "Rondel", "IBM Plex Sans", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.75rem;
+  --measure: 62ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1830; --panel: #16223F; --ink: #EEECE5; --muted: #9AA6C0;
+    --rule: #2B3858; --denim: #86A6D6; --red: #EE5A50; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1830; --panel: #16223F; --ink: #EEECE5; --muted: #9AA6C0;
+  --rule: #2B3858; --denim: #86A6D6; --red: #EE5A50; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+section, header, footer { padding-block: clamp(40px, 6vw, 72px); }
+section + section { border-top: 1px solid var(--rule); }
+h2 {
+  font-family: var(--f-mono);
+  font-weight: 500;
+  font-size: var(--step--1);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin: 0 0 8px;
+}
+.sub { font-size: var(--step-1); margin: 0 0 28px; max-width: var(--measure); text-wrap: balance; }
+.mono { font-family: var(--f-mono); }
+
+/* ---------- header ---------- */
+header { padding-bottom: 32px; }
+.eyebrow {
+  font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted); margin: 0;
+}
+h1.display {
+  font-family: var(--f-display);
+  font-weight: 400;
+  font-size: clamp(84px, 17vw, 210px);
+  line-height: 1.12;
+  margin: 8px 0 4px;
+  letter-spacing: 0.01em;
+  font-kerning: normal;
+}
+.lede { font-size: var(--step-1); max-width: 40ch; margin: 0 0 32px; text-wrap: balance; }
+.specs {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0; margin: 0; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule);
+}
+.specs div { padding: 12px 14px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.specs dt { font-family: var(--f-mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.specs dd { margin: 2px 0 0; font-family: var(--f-mono); font-size: var(--step-1); font-variant-numeric: tabular-nums; }
+
+/* ---------- construction ---------- */
+.bench { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: 1fr; } }
+.drawing { background: var(--panel); border: 1px solid var(--rule); }
+.drawing svg { display: block; width: 100%; height: auto; max-width: 100%; aspect-ratio: 1; }
+.readout {
+  display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: baseline; justify-content: space-between;
+  padding: 12px 16px; border-top: 1px solid var(--rule); font-family: var(--f-mono); font-size: var(--step--1);
+}
+.readout b { font-weight: 500; color: var(--ink); }
+.readout span { color: var(--muted); }
+.toggles { display: flex; flex-wrap: wrap; gap: 14px; }
+.toggles label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; color: var(--ink); }
+.toggles input { accent-color: var(--red); margin: 0; }
+
+.g-guide { fill: none; stroke: var(--denim); stroke-width: 3; }
+.g-band { stroke: var(--denim); stroke-width: 2; stroke-dasharray: 10 10; opacity: 0.7; }
+.g-base { stroke: var(--red); stroke-width: 2.5; opacity: 0.8; }
+.g-parent { fill: none; stroke: var(--denim); stroke-width: 2; stroke-dasharray: 4 9; opacity: 0.55; }
+.g-fill { fill: var(--ink); opacity: 0.88; }
+.g-skel { fill: none; stroke: var(--red); stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; }
+.g-centre { stroke: var(--denim); stroke-width: 2; }
+.g-label { font-family: var(--f-mono); font-size: 22px; fill: var(--muted); letter-spacing: 0.06em; }
+
+.set { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 4px; }
+.cell {
+  appearance: none; border: 1px solid transparent; background: transparent; color: var(--ink);
+  padding: 4px 2px 2px; cursor: pointer; display: grid; justify-items: center; gap: 0; border-radius: 2px;
+}
+.cell svg { width: 100%; max-width: 64px; aspect-ratio: 1; height: auto; display: block; }
+.cell svg circle { fill: none; stroke: var(--rule); stroke-width: 10; }
+.cell svg path { fill: currentColor; }
+.cell span { font-family: var(--f-mono); font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+.cell:hover { background: var(--panel); }
+.cell[aria-pressed="true"] { border-color: var(--red); background: var(--panel); }
+.cell[aria-pressed="true"] svg circle { stroke: var(--red); }
+.cell:focus-visible, button:focus-visible, input:focus-visible, .tester-text:focus-visible { outline: 2px solid var(--denim); outline-offset: 2px; }
+.set-note { font-size: var(--step--1); color: var(--muted); margin: 12px 0 0; max-width: var(--measure); }
+
+/* ---------- tester ---------- */
+.controls { display: flex; flex-wrap: wrap; gap: 16px 28px; align-items: center; margin-bottom: 20px; }
+.seg { display: inline-flex; border: 1px solid var(--ink); position: relative; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { padding: 7px 14px; font-family: var(--f-mono); font-size: var(--step--1); cursor: pointer; }
+.seg label + input + label { border-left: 1px solid var(--ink); }
+.seg input:checked + label { background: var(--ink); color: var(--paper); }
+.seg input:focus-visible + label { outline: 2px solid var(--denim); outline-offset: 2px; }
+.ctl { display: inline-flex; align-items: center; gap: 10px; font-family: var(--f-mono); font-size: var(--step--1); }
+.ctl input[type="range"] { width: 160px; accent-color: var(--red); }
+.ctl output { min-width: 4ch; font-variant-numeric: tabular-nums; }
+.swatches { display: inline-flex; gap: 6px; }
+.swatches button {
+  width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--paper); outline: 1px solid var(--rule); cursor: pointer; padding: 0;
+}
+.swatches button[aria-pressed="true"] { outline: 2px solid var(--ink); }
+.sw-ink { background: var(--ink); } .sw-denim { background: var(--denim); } .sw-red { background: var(--red); }
+.textbtn { appearance: none; border: 0; background: none; color: var(--denim); font-family: var(--f-mono); font-size: var(--step--1); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; padding: 0; }
+.tester-text {
+  font-family: var(--f-display); font-size: 56px; line-height: 1.25; color: var(--ink);
+  min-height: 3em; padding: 16px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  overflow-wrap: anywhere; outline: none; font-kerning: normal; white-space: pre-wrap;
+}
+
+/* ---------- styles ---------- */
+.styles { display: grid; gap: 0; }
+.style-row { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; align-items: center; padding: 22px 0; border-top: 1px solid var(--rule); }
+.style-row:last-child { border-bottom: 1px solid var(--rule); }
+@media (max-width: 700px) { .style-row { grid-template-columns: 1fr; gap: 8px; } }
+.style-row h3 { margin: 0; font-family: var(--f-mono); font-weight: 500; font-size: var(--step-0); }
+.style-row p { margin: 2px 0 0; font-size: var(--step--1); color: var(--muted); }
+.sample { font-size: clamp(36px, 6vw, 72px); line-height: 1.2; overflow-wrap: anywhere; min-width: 0; }
+.s-reg { font-family: "Rondel", var(--f-body); color: var(--ink); }
+.s-ring { font-family: "Rondel Ring", var(--f-body); color: var(--denim); }
+.s-coin { font-family: "Rondel Coin", var(--f-body); color: var(--red); }
+
+/* ---------- waterfall ---------- */
+.fall { display: grid; gap: 6px; }
+.fall div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 14px; align-items: baseline; }
+.fall .px { font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.fall .t { font-family: var(--f-display); white-space: nowrap; overflow: hidden; text-overflow: clip; line-height: 1.3; }
+
+/* ---------- get ---------- */
+.get { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; margin: 0 0 28px; }
+.get a { color: var(--ink); font-family: var(--f-mono); font-size: var(--step--1); }
+.get-btn { background: var(--ink); color: var(--paper) !important; padding: 9px 16px; text-decoration: none; }
+.get-btn:hover { background: var(--denim); }
+.get-src { text-decoration: underline; text-underline-offset: 3px; }
+.get-lic { font-size: var(--step--1); color: var(--muted); }
+footer a { color: inherit; }
+.get a:focus-visible, footer a:focus-visible { outline: 2px solid var(--denim); outline-offset: 2px; }
+
+/* ---------- monograms ---------- */
+.mono-bench { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: clamp(20px, 3vw, 40px); align-items: start; }
+@media (max-width: 860px) { .mono-bench { grid-template-columns: 1fr; } }
+.mono-stage {
+  background: var(--panel); border: 1px solid var(--rule); display: grid; place-items: center;
+  padding-block: clamp(20px, 4vw, 40px); min-width: 0;
+}
+.mono-out { font-family: "Rondel", var(--f-body); font-size: clamp(150px, 58vw, 320px); line-height: 1.12; color: var(--ink); white-space: nowrap; }
+.mono-side { display: grid; gap: 18px; min-width: 0; }
+.mono-label { font-family: var(--f-mono); font-size: var(--step--1); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.mono-in {
+  font-family: "Rondel", var(--f-body); font-size: 56px; line-height: 1.2; width: 100%; max-width: 16rem;
+  padding: 4px 12px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); text-transform: uppercase;
+}
+.mono-in:focus-visible { outline: 2px solid var(--denim); outline-offset: 2px; }
+.field { display: grid; gap: 6px; }
+.mono-hint { margin: 0; font-size: var(--step--1); color: var(--muted); }
+.mono-code { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; font-family: var(--f-mono); font-size: var(--step--1); }
+.mono-code code { font-family: var(--f-mono); font-size: var(--step-1); color: var(--ink); background: var(--panel); padding: 2px 8px; user-select: all; }
+.mono-code .copied { color: var(--denim); }
+.layouts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.layouts figure { margin: 0; display: grid; gap: 4px; justify-items: center; padding: 8px 4px; border: 1px solid transparent; }
+.layouts figure[aria-current="true"] { border-color: var(--red); }
+.layouts svg { width: 100%; max-width: 110px; height: auto; aspect-ratio: 1; }
+.layouts figcaption { font-family: var(--f-mono); font-size: 0.72rem; color: var(--muted); text-align: center; }
+.l-ring { fill: none; stroke: var(--ink); stroke-width: 6; }
+.l-slot { fill: none; stroke: var(--red); stroke-width: 2.5; stroke-dasharray: 5 5; }
+.l-dot { fill: var(--denim); }
+.mono-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 18px; margin-top: 32px; }
+.mono-gallery figure { margin: 0; display: grid; justify-items: center; gap: 2px; }
+.mono-gallery .g { font-family: "Rondel", var(--f-body); font-size: 112px; line-height: 1.1; }
+.mono-gallery figcaption { font-family: var(--f-mono); font-size: var(--step--1); color: var(--muted); }
+
+/* ---------- system notes ---------- */
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 36px; }
+.notes article { min-width: 0; }
+.notes h3 { font-family: var(--f-display); font-weight: 400; font-size: var(--step-2); margin: 0 0 6px; line-height: 1.3; }
+.notes p { margin: 0; max-width: var(--measure); }
+.notes .num { font-family: var(--f-mono); color: var(--denim); }
+
+footer { border-top: 1px solid var(--rule); font-family: var(--f-mono); font-size: var(--step--1); color: var(--muted); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: space-between; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .g-fill, .g-skel, .g-parent { transition: opacity 160ms ease; }
+}
+</style>
+
+<header>
+  <div class="wrap">
+    <p class="eyebrow">Typeface specimen &middot; version __VERSION__</p>
+    <h1 class="display">Rondel</h1>
+    <p class="lede">Every letter, figure and symbol is drawn inside the same circle, using only arcs of circles and straight lines.</p>
+    <p class="get"><a class="get-btn" href="__REPO__/releases/latest">Download the fonts</a> <a class="get-src" href="__REPO__">Source on GitHub</a> <span class="get-lic">Free under the SIL Open Font License</span></p>
+    <dl class="specs" aria-label="Font specifications">
+      <div><dt>Characters</dt><dd id="sp-glyphs">95</dd></div>
+      <div><dt>Monograms</dt><dd id="sp-combos">18,278</dd></div>
+      <div><dt>Styles</dt><dd>3</dd></div>
+      <div><dt>Units / em</dt><dd>1000</dd></div>
+      <div><dt>Circle &#8960;</dt><dd id="sp-circle">868</dd></div>
+      <div><dt>Stroke</dt><dd id="sp-stroke">68</dd></div>
+      <div><dt>Kern pairs</dt><dd id="sp-kern">__KERN__</dd></div>
+    </dl>
+  </div>
+</header>
+
+<section id="construction">
+  <div class="wrap">
+    <h2>Construction</h2>
+    <p class="sub">Pick any glyph to see the arcs and lines it is drawn from, and the circles those arcs belong to. Many arcs belong to the outer circle itself.</p>
+    <div class="bench">
+      <figure class="drawing" style="margin:0">
+        <svg id="insp" viewBox="-520 -520 1040 1040" role="img" aria-labelledby="insp-title">
+          <title id="insp-title">Construction drawing</title>
+          <defs><clipPath id="disc"><circle r="434"></circle></clipPath></defs>
+          <g transform="scale(1,-1)">
+            <g id="guides">
+              <line class="g-band" x1="-365" y1="234" x2="365" y2="234"></line>
+              <line class="g-base" x1="-365" y1="-234" x2="365" y2="-234"></line>
+              <line class="g-centre" x1="-16" y1="0" x2="16" y2="0"></line>
+              <line class="g-centre" x1="0" y1="-16" x2="0" y2="16"></line>
+            </g>
+            <g id="parents"></g>
+            <circle class="g-guide" r="434"></circle>
+            <path id="ig" class="g-fill" d=""></path>
+            <path id="is" class="g-skel" d="" clip-path="url(#disc)"></path>
+          </g>
+          <g id="labels">
+            <text class="g-label" x="372" y="-226">x-height</text>
+            <text class="g-label" x="372" y="258">baseline</text>
+            <text class="g-label" x="-500" y="-480">&#8960; 868</text>
+          </g>
+        </svg>
+        <figcaption class="readout">
+          <div><b id="r-name">R</b> <span id="r-code">U+0052</span> &nbsp;<span id="r-count">3 arcs &middot; 4 lines</span></div>
+          <div class="toggles">
+            <label><input type="checkbox" id="t-fill" checked> Outline</label>
+            <label><input type="checkbox" id="t-skel" checked> Skeleton</label>
+            <label><input type="checkbox" id="t-guide" checked> Guides</label>
+          </div>
+        </figcaption>
+      </figure>
+      <div>
+        <div class="set" id="set" role="group" aria-label="Glyph set"></div>
+        <p class="set-note">Red lines are stroke centre lines. Dashed circles are the circles each arc is cut from. Anything that runs past the outer circle is trimmed by it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tester">
+  <div class="wrap">
+    <h2>Type tester</h2>
+    <p class="sub">Type to try it. Rondel covers printable ASCII. Initials between &lt; and &gt; turn into a monogram.</p>
+    <div class="controls">
+      <div class="seg" role="radiogroup" aria-label="Style">
+        <input type="radio" name="st" id="st-reg" value="Rondel" checked><label for="st-reg">Regular</label>
+        <input type="radio" name="st" id="st-ring" value="Rondel Ring"><label for="st-ring">Ring</label>
+        <input type="radio" name="st" id="st-coin" value="Rondel Coin"><label for="st-coin">Coin</label>
+      </div>
+      <label class="ctl" for="size">Size <input type="range" id="size" min="16" max="180" value="64"> <output id="size-out" for="size">64px</output></label>
+      <div class="ctl"><span>Ink</span>
+        <div class="swatches">
+          <button type="button" class="sw-ink" data-c="var(--ink)" aria-label="Navy ink" aria-pressed="true"></button>
+          <button type="button" class="sw-denim" data-c="var(--denim)" aria-label="Denim ink" aria-pressed="false"></button>
+          <button type="button" class="sw-red" data-c="var(--red)" aria-label="Red ink" aria-pressed="false"></button>
+        </div>
+      </div>
+      <label class="ctl" for="kern"><input type="checkbox" id="kern" checked style="accent-color:var(--red)"> Kerning</label>
+      <button type="button" class="textbtn" id="reset">Reset text</button>
+    </div>
+    <div class="tester-text" id="tt" contenteditable="plaintext-only" spellcheck="false" role="textbox" aria-multiline="true" aria-label="Type tester">Arcs &amp; lines inside one circle.
+The quick brown fox jumps over the lazy dog, 2026!</div>
+  </div>
+</section>
+
+<section id="monograms">
+  <div class="wrap">
+    <h2>Monograms</h2>
+    <p class="sub">Type one to three letters between &lt; and &gt;, and Rondel sets them as a medallion. It works wherever the font runs, in Regular and Ring.</p>
+    <div class="mono-bench">
+      <div class="mono-stage">
+        <div class="mono-out" id="mono-out" role="img" aria-label="Monogram RV">&lt;RV&gt;</div>
+      </div>
+      <div class="mono-side">
+        <div class="field">
+          <label for="mono-in" class="mono-label">Initials</label>
+          <input id="mono-in" class="mono-in" type="text" maxlength="3" value="RV" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
+          <p class="mono-hint">Letters A to Z, one to three of them. Lowercase works too.</p>
+        </div>
+        <div class="mono-code">
+          <span>Type this</span>
+          <code id="mono-code">&lt;RV&gt;</code>
+          <button type="button" class="textbtn" id="mono-copy">Copy</button>
+          <span class="copied" id="mono-copied" hidden>Copied</span>
+        </div>
+        <div class="ctl"><span>Ink</span>
+          <div class="swatches" id="mono-ink">
+            <button type="button" class="sw-ink" data-c="var(--ink)" aria-label="Navy ink" aria-pressed="true"></button>
+            <button type="button" class="sw-denim" data-c="var(--denim)" aria-label="Denim ink" aria-pressed="false"></button>
+            <button type="button" class="sw-red" data-c="var(--red)" aria-label="Red ink" aria-pressed="false"></button>
+          </div>
+        </div>
+        <div class="layouts" id="layouts" aria-label="Monogram layouts"></div>
+      </div>
+    </div>
+    <div class="mono-gallery" id="mono-gallery"></div>
+  </div>
+</section>
+
+<section id="styles">
+  <div class="wrap">
+    <h2>Three styles</h2>
+    <p class="sub">One set of drawings, three ways to show the circle.</p>
+    <div class="styles">
+      <div class="style-row">
+        <div><h3>Rondel</h3><p>Open glyphs, proportional, kerned. The circle is implied by the cuts.</p></div>
+        <div class="sample s-reg">Round &amp; round we go</div>
+      </div>
+      <div class="style-row">
+        <div><h3>Rondel Ring</h3><p>Glyphs at 70% inside a visible ring. Monospaced.</p></div>
+        <div class="sample s-ring">RING 360</div>
+      </div>
+      <div class="style-row">
+        <div><h3>Rondel Coin</h3><p>Glyphs at 74%, knocked out of a solid disc. Monospaced.</p></div>
+        <div class="sample s-coin">Coin @ 50%</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="waterfall">
+  <div class="wrap">
+    <h2>Waterfall</h2>
+    <div class="fall" id="fall"></div>
+  </div>
+</section>
+
+<section id="system">
+  <div class="wrap">
+    <h2>The system</h2>
+    <div class="notes">
+      <article>
+        <h3>One circle</h3>
+        <p>Capitals fill a circle <span class="num">868</span> units across, centred <span class="num">234</span> units above the baseline. Strokes that reach the edge are trimmed by it, so outer terminals are curved cuts lying on that circle. Figures sit on a smaller concentric circle and are all exactly <span class="num">788</span> units tall.</p>
+      </article>
+      <article>
+        <h3>The x-circle</h3>
+        <p>Lowercase is built on a concentric circle of half the radius, giving an x-height of <span class="num">468</span>. Ascenders and descenders run out to the outer circle. Capitals share the same centre, so they reach <span class="num">200</span> units below the baseline.</p>
+      </article>
+      <article>
+        <h3>Arcs first</h3>
+        <p>A stroke is an arc wherever the letter survives it. The sides of H, M, N, U and W and the bars of E, F, L, T and Z run along the circle itself. Stems of B, D, E, F, K, L, P and R are cut from a circle of radius <span class="num">1,200</span>. Diagonals are bowed, and A's crossbar is swung from its apex. Straight lines remain for vertical axes, crossbars and the math signs. Every stroke is <span class="num">68</span> units wide.</p>
+      </article>
+      <article>
+        <h3>Monograms</h3>
+        <p>Each initial is drawn in its own circle, and every circle in a monogram has the same radius. Two letters form a vesica piscis, each centre lying on the other circle. Three letters form a chain, each circle passing through its neighbour's centre. The outer ring is the font's own circle, so strokes that reach it fuse into the frame. The monogram is built from overlay glyphs placed by contextual alternates, so it needs no special software. In Word, turn on contextual alternates or standard ligatures. Coin has no monograms, because separate overlay glyphs cannot knock letters out of a disc.</p>
+      </article>
+      <article>
+        <h3>Spacing</h3>
+        <p>Regular is proportional with <span class="num">48</span>-unit side bearings and <span class="num" id="kern-note">__KERN__</span> kern pairs measured from glyph profiles. Ring and Coin sit on a <span class="num">932</span>-unit monospaced cell.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Rondel __VERSION__ &middot; SIL Open Font License 1.1 &middot; <a href="__REPO__">GitHub</a></span>
+    <span>Built with fontTools and skia-pathops</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  const DATA = __GLYPH_DATA__;
+  const NS = "http://www.w3.org/2000/svg";
+  const glyphs = DATA.glyphs;
+  const m = DATA.meta;
+  document.getElementById("sp-glyphs").textContent = m.glyphs;
+  document.getElementById("sp-circle").textContent = 2 * m.D;
+  document.getElementById("sp-stroke").textContent = m.W;
+  document.getElementById("sp-kern").textContent = m.kern.toLocaleString("en-US");
+
+  // ----- inspector -----
+  const ig = document.getElementById("ig");
+  const is = document.getElementById("is");
+  const parents = document.getElementById("parents");
+  const rName = document.getElementById("r-name");
+  const rCode = document.getElementById("r-code");
+  const rCount = document.getElementById("r-count");
+  const set = document.getElementById("set");
+  const cells = [];
+
+  function plural(n, w) { return n + " " + w + (n === 1 ? "" : "s"); }
+
+  function show(i) {
+    const g = glyphs[i];
+    ig.setAttribute("d", g.p);
+    is.setAttribute("d", g.s);
+    parents.replaceChildren();
+    g.k.forEach(function (c) {
+      const el = document.createElementNS(NS, "circle");
+      el.setAttribute("cx", c[0]); el.setAttribute("cy", c[1]); el.setAttribute("r", c[2]);
+      el.setAttribute("class", "g-parent");
+      parents.appendChild(el);
+    });
+    rName.textContent = g.c;
+    rCode.textContent = "U+" + g.c.codePointAt(0).toString(16).toUpperCase().padStart(4, "0") + " " + g.n;
+    rCount.textContent = plural(g.arcs, "arc") + " · " + plural(g.lines, "line");
+    cells.forEach(function (b, j) { b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+  }
+
+  glyphs.forEach(function (g, i) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "cell";
+    b.setAttribute("aria-label", g.n);
+    b.setAttribute("aria-pressed", "false");
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "-460 -460 920 920");
+    svg.setAttribute("aria-hidden", "true");
+    const c = document.createElementNS(NS, "circle");
+    c.setAttribute("r", "434");
+    const p = document.createElementNS(NS, "path");
+    p.setAttribute("d", g.p);
+    p.setAttribute("transform", "scale(1,-1)");
+    svg.append(c, p);
+    const s = document.createElement("span");
+    s.textContent = g.c;
+    b.append(svg, s);
+    b.addEventListener("click", function () { show(i); });
+    set.appendChild(b);
+    cells.push(b);
+  });
+  const start = glyphs.findIndex(function (g) { return g.c === "R"; });
+  show(start < 0 ? 0 : start);
+
+  function bindToggle(id, el) {
+    const box = document.getElementById(id);
+    const apply = function () { el.style.opacity = box.checked ? "" : "0"; };
+    box.addEventListener("change", apply);
+  }
+  bindToggle("t-fill", ig);
+  bindToggle("t-skel", is);
+  const guideBox = document.getElementById("t-guide");
+  guideBox.addEventListener("change", function () {
+    const o = guideBox.checked ? "" : "0";
+    document.getElementById("guides").style.opacity = o;
+    document.getElementById("labels").style.opacity = o;
+    parents.style.opacity = o;
+  });
+
+  // ----- tester -----
+  const tt = document.getElementById("tt");
+  const DEFAULT_TEXT = tt.textContent;
+  const size = document.getElementById("size");
+  const sizeOut = document.getElementById("size-out");
+  function applySize() { tt.style.fontSize = size.value + "px"; sizeOut.textContent = size.value + "px"; }
+  size.addEventListener("input", applySize);
+  applySize();
+  document.querySelectorAll('input[name="st"]').forEach(function (r) {
+    r.addEventListener("change", function () {
+      tt.style.fontFamily = '"' + r.value + '", var(--f-body)';
+    });
+  });
+  document.querySelectorAll("#tester .swatches button").forEach(function (b, _, all) {
+    b.addEventListener("click", function () {
+      all.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      tt.style.color = b.dataset.c;
+    });
+  });
+  document.getElementById("kern").addEventListener("change", function (e) {
+    tt.style.fontKerning = e.target.checked ? "normal" : "none";
+  });
+  document.getElementById("reset").addEventListener("click", function () { tt.textContent = DEFAULT_TEXT; });
+  tt.addEventListener("paste", function (e) {
+    if (tt.contentEditable === "plaintext-only") return;
+    e.preventDefault();
+    const text = (e.clipboardData || window.clipboardData).getData("text/plain");
+    document.execCommand("insertText", false, text);
+  });
+  if (tt.contentEditable !== "plaintext-only") tt.contentEditable = "true";
+
+  // ----- monograms -----
+  const monoIn = document.getElementById("mono-in");
+  const monoOut = document.getElementById("mono-out");
+  const monoCode = document.getElementById("mono-code");
+  const monoCopied = document.getElementById("mono-copied");
+  const layouts = document.getElementById("layouts");
+  const slots = m.mono;
+  const LAYOUTS = [
+    { n: 1, label: "1 letter", keys: ["mono1"] },
+    { n: 2, label: "2 letters", keys: ["mono2l", "mono2r"] },
+    { n: 3, label: "3 letters", keys: ["mono3l", "mono3c", "mono3r"] }
+  ];
+  const figs = LAYOUTS.map(function (L) {
+    const fig = document.createElement("figure");
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", "-112 -112 224 224");
+    svg.setAttribute("aria-hidden", "true");
+    const ring = document.createElementNS(NS, "circle");
+    ring.setAttribute("r", "100"); ring.setAttribute("class", "l-ring");
+    svg.appendChild(ring);
+    L.keys.forEach(function (key) {
+      const s = slots[key];
+      const c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", s[1] * 100); c.setAttribute("cy", -s[2] * 100); c.setAttribute("r", s[0] * 100);
+      c.setAttribute("class", "l-slot");
+      const d = document.createElementNS(NS, "circle");
+      d.setAttribute("cx", s[1] * 100); d.setAttribute("cy", -s[2] * 100); d.setAttribute("r", "4");
+      d.setAttribute("class", "l-dot");
+      svg.append(c, d);
+    });
+    const cap = document.createElement("figcaption");
+    cap.textContent = L.label;
+    fig.append(svg, cap);
+    layouts.appendChild(fig);
+    return fig;
+  });
+
+  function updateMono() {
+    let v = monoIn.value.replace(/[^A-Za-z]/g, "").slice(0, 3);
+    if (monoIn.value !== v) monoIn.value = v;
+    const shown = (v || "RV").toUpperCase();
+    const code = "<" + shown + ">";
+    monoOut.textContent = code;
+    monoOut.setAttribute("aria-label", "Monogram " + shown.split("").join(" "));
+    monoCode.textContent = code;
+    figs.forEach(function (f, i) { f.setAttribute("aria-current", i === shown.length - 1 ? "true" : "false"); });
+  }
+  monoIn.addEventListener("input", updateMono);
+  updateMono();
+
+  document.getElementById("mono-copy").addEventListener("click", function () {
+    const text = monoCode.textContent;
+    function selectCode() {
+      const r = document.createRange(); r.selectNodeContents(monoCode);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () {
+        monoCopied.hidden = false;
+        setTimeout(function () { monoCopied.hidden = true; }, 1600);
+      }, selectCode);
+    } catch (e) { selectCode(); }
+  });
+
+  document.querySelectorAll("#mono-ink button").forEach(function (b, _, all) {
+    b.addEventListener("click", function () {
+      all.forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+      monoOut.style.color = b.dataset.c;
+    });
+  });
+
+  const gallery = document.getElementById("mono-gallery");
+  ["OC", "AB", "JD", "LBJ", "SPQ", "Q"].forEach(function (w) {
+    const fig = document.createElement("figure");
+    const g = document.createElement("div");
+    g.className = "g"; g.setAttribute("role", "img"); g.setAttribute("aria-label", "Monogram " + w.split("").join(" "));
+    g.textContent = "<" + w + ">";
+    const cap = document.createElement("figcaption");
+    cap.textContent = "<" + w + ">";
+    fig.append(g, cap);
+    gallery.appendChild(fig);
+  });
+
+  // ----- waterfall -----
+  const fall = document.getElementById("fall");
+  [120, 72, 48, 32, 22, 15].forEach(function (px) {
+    const row = document.createElement("div");
+    const a = document.createElement("span"); a.className = "px"; a.textContent = px + "px";
+    const t = document.createElement("span"); t.className = "t"; t.style.fontSize = px + "px";
+    t.textContent = "Arcs and lines, one circle: Rondel __VERSION__";
+    row.append(a, t);
+    fall.appendChild(row);
+  });
+})();
+</script>
