@@ -1,6 +1,15 @@
 name: Release
 
+# Run it from the Actions tab (Release > Run workflow) and enter the version,
+# or push a tag such as v1.500. Either way it zips the committed fonts and
+# publishes a GitHub Release.
+
 on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release, e.g. 1.500"
+        required: true
   push:
     tags: ["v*"]
 
@@ -13,21 +22,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Work out the version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then VER="${{ inputs.version }}"; else VER="${GITHUB_REF_NAME#v}"; fi
+          VER="${VER#v}"
+          echo "VER=$VER" >> "$GITHUB_ENV"
+          echo "TAG=v$VER" >> "$GITHUB_ENV"
+
       - name: Package the committed fonts
         run: |
-          VER="${GITHUB_REF_NAME#v}"
           DIR="Rondel-$VER"
           mkdir -p "$DIR"
           cp -r fonts/ttf fonts/webfonts OFL.txt "$DIR"/
           cp documentation/specimen/index.html "$DIR/Rondel-Specimen.html"
           zip -qr "$DIR.zip" "$DIR"
           echo "ZIP=$DIR.zip" >> "$GITHUB_ENV"
-          echo "VER=$VER" >> "$GITHUB_ENV"
 
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >
-          gh release create "$GITHUB_REF_NAME" "$ZIP"
+          gh release create "$TAG" "$ZIP"
+          --target "$GITHUB_SHA"
           --title "Rondel $VER"
           --notes-file .github/release-notes.md
