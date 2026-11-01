@@ -22,14 +22,14 @@
       <point x="900" y="148"/>
     </contour>
     <contour>
-      <point x="432" y="564" type="line"/>
-      <point x="449" y="566"/>
-      <point x="483" y="566"/>
-      <point x="500" y="564" type="qcurve"/>
-      <point x="500" y="-96" type="line"/>
-      <point x="483" y="-98"/>
-      <point x="449" y="-98"/>
-      <point x="432" y="-96" type="qcurve"/>
+      <point x="436" y="415" type="line"/>
+      <point x="451" y="418"/>
+      <point x="481" y="418"/>
+      <point x="496" y="415" type="qcurve"/>
+      <point x="496" y="53" type="line"/>
+      <point x="481" y="50"/>
+      <point x="451" y="50"/>
+      <point x="436" y="53" type="qcurve"/>
     </contour>
   </outline>
 </glyph>

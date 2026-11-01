@@ -1882,6 +1882,140 @@ for _n, (_cp, _b, _m) in COMPOSITES.items():
 
 
 # --------------------------------------------------------------------------------------
+# Symbols at lowercase size
+#
+# Punctuation and symbols sit on the baseline and are exactly x-height tall: they are
+# drawn in the lowercase circle (radius XB), the same circle the lowercase lives in.
+# Most are the full-size drawings scaled into that circle (strokes that run out are
+# trimmed by it); the ones whose details would clog at that size are drawn natively.
+# Figures, the low quotes, dashes, math signs and the underscore keep their positions.
+# --------------------------------------------------------------------------------------
+W_SYM = 0.88 * W                               # symbols are a touch lighter than letters
+K_CIRCLE = (XB - W / 2) / (D - W / 2)          # big circle -> lowercase circle (= 0.5)
+K_FIG = (XB - W / 2) / (FIG_H - W / 2)         # figure height -> x-height
+
+SCALED_SYMBOLS = {
+    # name: drawn on the big circle (False) or at figure height (True)
+    "numbersign": False, "dollar": False, "at": False, "asterisk": False,
+    "parenleft": False, "parenright": False, "bracketleft": False, "bracketright": False,
+    "braceleft": False, "braceright": False, "slash": False, "backslash": False, "bar": False,
+    "asciicircum": False, "grave": False, "cent": False,
+    "sterling": True, "yen": True, "Euro": True,
+}
+
+
+def _scaled(fn, fig):
+    k = K_FIG if fig else K_CIRCLE
+    return lambda g: fn(g.part(0, 0, k, W_SYM))
+
+
+for _n, _fig in SCALED_SYMBOLS.items():
+    _u, _f = GLYPHS[_n]
+    GLYPHS[_n] = (_u, _scaled(_f, _fig))
+
+LC_DOT_Y = XB - DOT                            # a dot whose top is on the x-height
+
+
+def lc_exclam(g):
+    arc3(g, (0.03, XB), (0, -0.10), 0.035)
+    g.dot(BASE_DOT)
+
+
+def lc_question(g):
+    r = 0.23
+    c_ = (0, XB - W / 2 - r)
+    t = -40
+    g.arc(c_, r, 165, t)
+    biarc(g, pc(t, r, c_), arc_dir(t, True), (0, -0.10), (0, -1))
+    g.dot(BASE_DOT)
+
+
+def lc_tick(g, x):
+    arc3(g, (x + 0.035, XB), (x - 0.03, XB - 0.34), 0.05)
+
+
+def lc_quote_right(g, x):
+    comma_shape(g.part(x, LC_DOT_Y - BASE_DOT[1]))
+
+
+def lc_quote_left(g, x):
+    comma_shape(g.part(x, (XB - 0.434) + BASE_DOT[1]).flipped(-1, -1))
+
+
+def lc_percent(g):
+    for c_ in ((-0.27, 0.29), (0.27, -0.29)):
+        g.ring(c_, 0.15)
+    arc3(g, (-0.40, -0.50), (0.40, 0.50), 0.06, "f", "f")
+
+
+def lc_ampersand(g):
+    lc_, lr = (-0.06, 0.30), 0.17
+    g.arc(lc_, lr, -35, 215)
+    tarc(g, pc(215, lr, lc_), arc_dir(215, False), (0.44, -0.56))
+    cb, rb = (-0.07, -0.24), 0.27
+    b0, b1 = 125, 370
+    g.arc(cb, rb, b0, b1)
+    biarc(g, pc(-35, lr, lc_), arc_dir(-35, True), pc(b0, rb, cb), arc_dir(b0, False))
+    tarc(g, pc(b1, rb, cb), arc_dir(b1, False), (0.40, 0.02))
+
+
+def lc_section(g):
+    r = 0.155
+    g.ring((0, 0), r)
+    g.arc((0, 2 * r), r, 20, 270)
+    g.arc((0, -2 * r), r, 200, 450)
+
+
+def lc_paragraph(g):
+    y = XB - W / 2
+    g.arc((0.04, y - 0.22), 0.22, 90, 270)
+    g.line((0.04, y), (0.26, y))
+    g.line((0.04, y), (0.04, -XB))
+    g.line((0.26, y), (0.26, -XB))
+
+
+def lc_circled(letter):
+    def fn(g):
+        g.ring((0, 0), XR)
+        GLYPHS[letter][1](g.part(0, 0, 0.27, W * 0.6))
+    return fn
+
+
+def lc_trademark(g):
+    for letter, x in (("T", -0.25), ("M", 0.25)):
+        GLYPHS[letter][1](g.part(x, 0.30, 0.22, W * 0.55))
+
+
+def lc_degree(g):
+    r = 0.11
+    g.part(0, XB - W_ACC / 2 - r, w=W_ACC).ring((0, 0), r)
+
+
+def lc_ordinal(letter):
+    def fn(g):
+        GLYPHS[letter][1](g.part(0, 0.15, 0.6, W * 0.7))
+        g.line((-0.26, -XB + W / 2), (0.26, -XB + W / 2))
+    return fn
+
+
+for _n, _f in (("exclam", lc_exclam), ("question", lc_question),
+               ("quotesingle", lambda g: lc_tick(g, 0)),
+               ("quotedbl", lambda g: (lc_tick(g, -0.17), lc_tick(g, 0.17))),
+               ("quoteright", lambda g: lc_quote_right(g, 0)),
+               ("quoteleft", lambda g: lc_quote_left(g, 0)),
+               ("quotedblright", lambda g: (lc_quote_right(g, -0.2), lc_quote_right(g, 0.2))),
+               ("quotedblleft", lambda g: (lc_quote_left(g, -0.2), lc_quote_left(g, 0.2))),
+               ("percent", lc_percent), ("ampersand", lc_ampersand), ("section", lc_section),
+               ("paragraph", lc_paragraph), ("copyright", lc_circled("C")),
+               ("registered", lc_circled("R")), ("trademark", lc_trademark),
+               ("degree", lc_degree), ("ordfeminine", lc_ordinal("a")),
+               ("ordmasculine", lc_ordinal("o"))):
+    GLYPHS[_n] = (GLYPHS[_n][0], _f)
+GLYPHS["exclamdown"] = (0x00A1, mirror(lc_exclam, -1, -1))
+GLYPHS["questiondown"] = (0x00BF, mirror(lc_question, -1, -1))
+
+
+# --------------------------------------------------------------------------------------
 # Styles and font assembly
 #
 # This script writes UFO sources (sources/ufo/*.ufo); gftools builder compiles them

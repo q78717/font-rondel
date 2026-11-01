@@ -22,19 +22,14 @@
       <point x="900" y="148"/>
     </contour>
     <contour>
-      <point x="451" y="565" type="qcurve"/>
-      <point x="458" y="566"/>
-      <point x="466" y="566" type="qcurve" smooth="yes"/>
-      <point x="494" y="566"/>
-      <point x="520" y="561" type="qcurve"/>
-      <point x="534" y="469"/>
-      <point x="530" y="375" type="qcurve" smooth="yes"/>
-      <point x="525" y="272"/>
-      <point x="499" y="172" type="qcurve"/>
-      <point x="433" y="189" type="line"/>
-      <point x="457" y="282"/>
-      <point x="462" y="378" type="qcurve" smooth="yes"/>
-      <point x="466" y="472"/>
+      <point x="508" y="413" type="line"/>
+      <point x="517" y="359"/>
+      <point x="512" y="249"/>
+      <point x="499" y="196" type="qcurve"/>
+      <point x="433" y="213" type="line"/>
+      <point x="445" y="259"/>
+      <point x="449" y="355"/>
+      <point x="441" y="402" type="qcurve"/>
     </contour>
     <contour>
       <point x="514" y="87"/>
