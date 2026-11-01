@@ -32,11 +32,11 @@ test: build.stamp
 	which fontspector || (echo "fontspector not found. Please install it with 'cargo binstall fontspector'." && exit 1)
 	mkdir -p out/ out/fontspector
 	fontspector --profile googlefonts -l warn --full-lists --succinct --html out/fontspector/fontspector-report.html --ghmarkdown out/fontspector/fontspector-report.md --badges out/badges fonts/ttf/Rondel-Regular.ttf || echo '::warning file=sources/config.yaml,title=fontspector failures::The fontspector QA check reported errors in Rondel. Please check the generated report.'
-	fontspector --profile universal -l warn --full-lists --succinct --html out/fontspector/fontspector-ring-coin.html --ghmarkdown out/fontspector/fontspector-ring-coin.md fonts/ttf/RondelRing-Regular.ttf fonts/ttf/RondelCoin-Regular.ttf || echo '::warning file=sources/config-ring.yaml,title=fontspector failures::The fontspector QA check reported errors in Rondel Ring or Rondel Coin. Please check the generated report.'
+	for f in RondelRing RondelCoin; do fontspector --profile universal -l warn --full-lists --succinct --html out/fontspector/$$f-report.html --ghmarkdown out/fontspector/$$f-report.md fonts/ttf/$$f-Regular.ttf || echo "::warning title=fontspector failures::The fontspector QA check reported errors in $$f. Please check the generated report."; done
 
 proof: venv build.stamp
 	which diff3proof || (echo "diff3proof not found. Please install it with 'cargo binstall diffenator3'." && exit 1)
-	. venv/bin/activate; mkdir -p out/ out/proof; diff3proof $$(find fonts/ttf -type f) --output out/proof
+	. venv/bin/activate; mkdir -p out/ out/proof; for f in fonts/ttf/*.ttf; do diff3proof $$f --output out/proof/$$(basename $$f .ttf); done
 
 images: venv build.stamp
 	. venv/bin/activate; python3 sources/tools/readme_images.py

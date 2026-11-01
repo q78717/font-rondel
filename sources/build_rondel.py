@@ -1606,6 +1606,27 @@ def Euro(g):
         g.line((-0.90, y), (x1, y))
 
 
+@glyph("rupeeIndian", 0x20B9)
+def rupee(g):
+    g.vlimit(FIG_H)
+    yt = FIG_R
+    ym = yt - 0.34
+    g.line((-0.46, yt), (0.46, yt))
+    g.line((-0.46, ym), (0.46, ym))
+    c, r = (-0.08, ym), yt - ym
+    g.arc(c, r, 90, -90)
+    yb = ym - r
+    g.line((-0.08, yb), (-0.46, yb))
+    p0 = (-0.46, yb)
+    cc, rr, a0, a1 = arc3(g, p0, (0.42, -1.1), 0.08, "f", "c")
+    g.corner(p0, (-1, 0), start_dir(cc, a0, a1))
+
+
+SEPARATORS = {"uni2028": 0x2028, "uni2029": 0x2029}      # line / paragraph separator: empty
+for _n, _u in SEPARATORS.items():
+    GLYPHS[_n] = (_u, lambda g: None)
+
+
 @glyph("section", 0x00A7)
 def section(g):
     r = 0.27
@@ -1900,7 +1921,7 @@ SCALED_SYMBOLS = {
     "parenleft": False, "parenright": False, "bracketleft": False, "bracketright": False,
     "braceleft": False, "braceright": False, "slash": False, "backslash": False, "bar": False,
     "asciicircum": False, "grave": False, "cent": False,
-    "sterling": True, "yen": True, "Euro": True,
+    "sterling": True, "yen": True, "Euro": True, "rupeeIndian": True,
 }
 
 
@@ -2313,6 +2334,9 @@ def build_glyphs(style):
             continue                              # only used as a component in Regular
         path = Path() if name == "space" else glyph_outline(name, k, mode)
         b = path_bounds(path)
+        if name in SEPARATORS:
+            out[name] = dict(path=Path(), dx=0, adv=0, unicodes=[uni])
+            continue
         if is_mark(name):
             dx = -MARK_CENTER * S if mode == "open" else -cell / 2
             adv = 0
@@ -2470,7 +2494,7 @@ def write_ufo(style, path_out):
     info.openTypeHheaAscender, info.openTypeHheaDescender, info.openTypeHheaLineGap = asc, desc, 0
     info.openTypeOS2TypoAscender, info.openTypeOS2TypoDescender, info.openTypeOS2TypoLineGap = asc, desc, 0
     info.openTypeOS2WinAscent, info.openTypeOS2WinDescent = asc, -desc
-    info.openTypeOS2Selection = [7]               # USE_TYPO_METRICS
+    info.openTypeOS2Selection = [7, 8]            # USE_TYPO_METRICS, WWS (Regular only)
     info.openTypeOS2Type = []                     # installable
     info.openTypeOS2VendorID = "RNDL"
     info.openTypeOS2WeightClass = 400

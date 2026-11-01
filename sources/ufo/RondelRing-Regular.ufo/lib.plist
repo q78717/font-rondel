@@ -127,6 +127,9 @@
       <string>sterling</string>
       <string>yen</string>
       <string>Euro</string>
+      <string>rupeeIndian</string>
+      <string>uni2028</string>
+      <string>uni2029</string>
       <string>section</string>
       <string>paragraph</string>
       <string>copyright</string>
@@ -1031,6 +1034,8 @@
       <string>base</string>
       <key>ringcomb</key>
       <string>mark</string>
+      <key>rupeeIndian</key>
+      <string>base</string>
       <key>s</key>
       <string>base</string>
       <key>sacute</key>
@@ -1088,6 +1093,10 @@
       <key>umacron</key>
       <string>base</string>
       <key>underscore</key>
+      <string>base</string>
+      <key>uni2028</key>
+      <string>base</string>
+      <key>uni2029</key>
       <string>base</string>
       <key>uogonek</key>
       <string>base</string>
@@ -2005,6 +2014,8 @@
       <string>ring</string>
       <key>ringcomb</key>
       <string>uni030A</string>
+      <key>rupeeIndian</key>
+      <string>uni20B9</string>
       <key>s</key>
       <string>s</string>
       <key>sacute</key>
@@ -2063,6 +2074,10 @@
       <string>umacron</string>
       <key>underscore</key>
       <string>underscore</string>
+      <key>uni2028</key>
+      <string>uni2028</string>
+      <key>uni2029</key>
+      <string>uni2029</string>
       <key>uogonek</key>
       <string>uogonek</string>
       <key>uring</key>
