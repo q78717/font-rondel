@@ -244,7 +244,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
 }
 :root[data-theme="dark"] .rv-toggle .sun { display: block; }
 :root[data-theme="dark"] .rv-toggle .moon { display: none; }
-/* Inside q-rv.github.io the site header's toggle drives the theme. */
+/* Inside the q78717.github.io site header's toggle drives the theme. */
 .rv-embedded .rv-toggle { display: none; }
 </style>
 <script>
@@ -651,7 +651,7 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
 })();
 </script>
 <script>
-// Light/dark toggle; when embedded in q-rv.github.io, follow the wrapper's toggle instead.
+// Light/dark toggle; when embedded in the q78717.github.io site, follow the wrapper's toggle instead.
 (function () {
   var r = document.documentElement;
   function effective() {
@@ -667,14 +667,14 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
   });
   document.body.appendChild(b);
   window.addEventListener("message", function (e) {
-    if (e.origin !== "https://q-rv.github.io" || !e.data || e.data.type !== "rv-theme") return;
+    if (e.origin !== "https://q78717.github.io" || !e.data || e.data.type !== "rv-theme") return;
     var t = e.data.theme;
     if (t === "light" || t === "dark") r.setAttribute("data-theme", t);
     else r.removeAttribute("data-theme");
   });
   // Ask the wrapper for its theme once listening, so frame load timing can't drop it.
   if (r.classList.contains("rv-embedded")) {
-    try { window.parent.postMessage({ type: "rv-theme-ready" }, "https://q-rv.github.io"); } catch (e) {}
+    try { window.parent.postMessage({ type: "rv-theme-ready" }, "https://q78717.github.io"); } catch (e) {}
   }
 })();
 </script>
