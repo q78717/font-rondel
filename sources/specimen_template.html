@@ -671,5 +671,9 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
     if (t === "light" || t === "dark") r.setAttribute("data-theme", t);
     else r.removeAttribute("data-theme");
   });
+  // Ask the wrapper for its theme once listening, so frame load timing can't drop it.
+  if (r.classList.contains("rv-embedded")) {
+    try { window.parent.postMessage({ type: "rv-theme-ready" }, "https://q-rv.github.io"); } catch (e) {}
+  }
 })();
 </script>
