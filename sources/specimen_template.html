@@ -10,13 +10,14 @@
 
 /* Layout: a drafting sheet. Quiet header, then the compass drawing (inspector + glyph set) as the one bold block, then tester, styles, system notes. */
 :root {
-  --paper: #F2F1EC;
-  --panel: #E6E8EC;
-  --ink: #14213D;
-  --muted: #56607A;
-  --rule: #CDD2DC;
-  --denim: #3E6194;
-  --red: #C3322B;
+  /* rv site palette: darknavy #0d1b2a, offwhite #f5f3ee, denim #3b5b8c, red #d72638 */
+  --paper: #f5f3ee;
+  --panel: #ffffff;
+  --ink: #0d1b2a;
+  --muted: rgba(13, 27, 42, 0.68);
+  --rule: rgba(13, 27, 42, 0.14);
+  --denim: #3b5b8c;
+  --red: #d72638;
   --f-display: "Rondel", "IBM Plex Sans", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -28,13 +29,13 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0E1830; --panel: #16223F; --ink: #EEECE5; --muted: #9AA6C0;
-    --rule: #2B3858; --denim: #86A6D6; --red: #EE5A50; color-scheme: dark;
+    --paper: #0d1b2a; --panel: #13263a; --ink: #f5f3ee; --muted: rgba(245, 243, 238, 0.70);
+    --rule: rgba(245, 243, 238, 0.14); --denim: #8fb0e0; --red: #d72638; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #0E1830; --panel: #16223F; --ink: #EEECE5; --muted: #9AA6C0;
-  --rule: #2B3858; --denim: #86A6D6; --red: #EE5A50; color-scheme: dark;
+  --paper: #0d1b2a; --panel: #13263a; --ink: #f5f3ee; --muted: rgba(245, 243, 238, 0.70);
+  --rule: rgba(245, 243, 238, 0.14); --denim: #8fb0e0; --red: #d72638; color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -228,6 +229,30 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
   .g-fill, .g-skel, .g-parent { transition: opacity 160ms ease; }
 }
 </style>
+<style id="rv-theme-toggle">
+.rv-toggle { position: fixed; top: 16px; right: 16px; z-index: 50; width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--rule);
+  border-radius: 6px; background: var(--paper); color: var(--denim); cursor: pointer; }
+.rv-toggle:hover { color: var(--red); }
+.rv-toggle:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+.rv-toggle svg { width: 20px; height: 20px; fill: currentColor; }
+.rv-toggle .sun { display: none; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .rv-toggle .sun { display: block; }
+  :root:not([data-theme="light"]) .rv-toggle .moon { display: none; }
+}
+:root[data-theme="dark"] .rv-toggle .sun { display: block; }
+:root[data-theme="dark"] .rv-toggle .moon { display: none; }
+/* Inside q-rv.github.io the site header's toggle drives the theme. */
+.rv-embedded .rv-toggle { display: none; }
+</style>
+<script>
+(function () {
+  var r = document.documentElement;
+  if (window.self !== window.top) r.classList.add("rv-embedded");
+  else { try { var t = localStorage.getItem("theme"); if (t === "light" || t === "dark") r.setAttribute("data-theme", t); } catch (e) {} }
+})();
+</script>
 
 <header>
   <div class="wrap">
@@ -621,6 +646,30 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 28px; justify-content: s
     t.textContent = "Arcs and lines, one circle: Rondel __VERSION__";
     row.append(a, t);
     fall.appendChild(row);
+  });
+})();
+</script>
+<script>
+// Light/dark toggle; when embedded in q-rv.github.io, follow the wrapper's toggle instead.
+(function () {
+  var r = document.documentElement;
+  function effective() {
+    return r.getAttribute("data-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+  var b = document.createElement("button");
+  b.className = "rv-toggle"; b.type = "button"; b.setAttribute("aria-label", "Toggle light and dark mode");
+  b.innerHTML = '<svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg><svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></svg>';
+  b.addEventListener("click", function () {
+    var next = effective() === "dark" ? "light" : "dark";
+    r.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+  document.body.appendChild(b);
+  window.addEventListener("message", function (e) {
+    if (e.origin !== "https://q-rv.github.io" || !e.data || e.data.type !== "rv-theme") return;
+    var t = e.data.theme;
+    if (t === "light" || t === "dark") r.setAttribute("data-theme", t);
+    else r.removeAttribute("data-theme");
   });
 })();
 </script>
